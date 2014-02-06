@@ -113,6 +113,28 @@
       });
     },
     
+    // Select all files in a download task specified by GID.
+    selectAllFiles = function(gid){
+      var files = document.querySelectorAll(
+        "#download-files-" + gid + " input[type='checkbox']"),
+        index = 0;
+      while(index < files.length){
+        files[index].checked = true;
+        index += 1;
+      }
+    },
+    
+    // Unselected all files in a download task specified by GID.
+    unselectAllFiles = function(gid){
+      var files = document.querySelectorAll(
+        "#download-files-" + gid + " input[type='checkbox']"),
+        index = 0;
+      while(index < files.length){
+        files[index].checked = false;
+        index += 1;
+      }
+    },
+    
     /*
       Core.
     */
@@ -265,12 +287,13 @@
           "input[type='checkbox']"));
       files.forEach(function(file, index){
         if(file.checked){
-          selectedFileIndices.push(index);
+          // Note that the file index used in aria2 begins from 1, not 0.
+          selectedFileIndices.push(index + 1);
         }
       });
       selectedFileIndicesString = JSON.stringify(selectedFileIndices);
-      selectedFileIndicesString = 
-        selectedFileIndicesString.slice(1, selectedFileIndices.length - 1);
+      selectedFileIndicesString = selectedFileIndicesString.slice(
+        1, selectedFileIndicesString.length - 1);
       requestBody = {
         jsonrpc: "2.0",
         method: "aria2.changeOption",
@@ -372,7 +395,10 @@
               docFragment = document.createDocumentFragment(),
               container = document.createElement("div"),
               startOrPauseButton = null,
-              stopButton = null;
+              stopButton = null,
+              selectAllButton = null,
+              unselectAllButton = null,
+              saveButton = null;
             // Extract paths of files.
             download.files.forEach(function(file){
               fileInfos.push({
@@ -426,6 +452,23 @@
               docFragment.querySelector("#download-stop-" + download.gid);
             stopButton.onclick = function(){
               stopDownload(download.gid);
+            };
+            // Bind functions to buttons for select or unselect all files, and 
+            // button for updating download task.
+            selectAllButton = docFragment.querySelector(
+              "#download-" + download.gid + "-select-all-button");
+            selectAllButton.onclick = function(){
+              selectAllFiles(download.gid);
+            };
+            unselectAllButton = docFragment.querySelector(
+              "#download-" + download.gid + "-unselect-all-button");
+            unselectAllButton.onclick = function(){
+              unselectAllFiles(download.gid);
+            };
+            saveButton = docFragment.querySelector(
+              "#download-" + download.gid + "-save-button");
+            saveButton.onclick = function(){
+              updateDownload(download.gid);
             };
             // Append document fragment to inactive downloads list.
             inactiveDownloads.appendChild(docFragment);
