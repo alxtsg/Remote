@@ -691,9 +691,10 @@
     }
     hideCommandPanels();
     document.getElementById("statistics-panel").style.display = "block";
+    getStatistics();
   };
   
-  // Refresh list of download tasks.
+  // Refresh statistics and list of download tasks.
   document.getElementById("refresh-button").onclick = function(){
     hideErrorMessage();
     // If RPC interface endpoint has not been configured, show error message and
@@ -702,6 +703,7 @@
       showErrorMessage("Host and port of aria2 are not configured.");
       return;
     }
+    getStatistics();
     getDownloads();
   };
   
