@@ -239,7 +239,7 @@
       xhrHelper(requestBody, successCallback, errorCallback);
     },
     
-    // Get waiting downloads.
+    // Get waiting download tasks.
     getWaitingDownloads = function(){
       var requestBody = {
         id: Date.now(),
@@ -307,13 +307,70 @@
           });
         },
         errorCallback = function(){
-          showErrorMessage("Unable to get inactive downloads.");
+          showErrorMessage("Unable to get waiting downloads.");
         };
       xhrHelper(requestBody, successCallback, errorCallback);
     },
     
+    // Get stopped download tasks.
     getStoppedDownloads = function(){
-      window.console.log("To be implemented.");
+      var requestBody = {
+        id: Date.now(),
+        jsonrpc: "2.0",
+        method: "aria2.tellStopped",
+        params: [0, 1000]
+        },
+        successCallback = function(response){
+          var inactiveDownloads = document.getElementById("inactive-downloads");
+          response.result.forEach(function(download){
+            var fileInfos = [],
+              downloadDetails = null,
+              downloadTask = null,
+              container = document.createElement("div"),
+              startOrPauseButton = null,
+              stopButton = null;
+            // Extract paths of files.
+            download.files.forEach(function(file){
+              fileInfos.push({
+                fileName: file.path
+              });
+            });
+            // Define download task details for rendering.
+            downloadDetails = {
+              gid: download.gid,
+              uploadSpeed: ((download.uploadSpeed / 1000 * 8).toFixed(2)) + 
+                " kb/s",
+              downloadSpeed: ((download.downloadSpeed / 1000 * 8).toFixed(2)) +
+                " kb/s",
+              completePercentage: 
+                (((download.completedLength / download.totalLength) 
+                  * 100).toFixed(2)) + " %",
+              status: download.status,
+              downloadFiles: fileInfos,
+              canBePaused: false,
+              canBeUpdated: false
+            };
+            // Render download task, embed the rendered string (in HTML) in a 
+            // container.
+            downloadTask = 
+              Mustache.render(downloadTaskTemplate, downloadDetails);
+            container.innerHTML = downloadTask;
+            container.id = "download-" + download.gid;
+            // Append container to inactive downloads list.
+            inactiveDownloads.appendChild(container);
+            // Bind functions to stop button.
+            stopButton = 
+              document.getElementById("download-stop-" + download.gid);
+            stopButton.onclick = function(){
+              removeDownload(download.gid);
+              getDownloads();
+            };
+          });
+        },
+        errorCallback = function(){
+          showErrorMessage("Unable to get stopped downloads.");
+        };
+      xhrHelper(requestBody, successCallback, errorCallback);
     };
     
   // Get download tasks.
