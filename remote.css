@@ -1,0 +1,45 @@
+body{
+  background-color: black;
+  color: #aaaaaa;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+#aria2-version, span.speed, span.gid, span.complete-percentage, 
+  span.download-status{
+  margin-right: 3em;
+}
+
+form.command-panel, div.command-panel{
+  margin: 0.3em 0em;
+}
+
+#add-by-url-panel, #add-by-torrent-panel, #statistics-panel{
+  display: none;
+}
+
+input[type='text'], input[type='number'], input[type='password']{
+  font-family: Arial, Helvetica, sans-serif;
+  width: 10em;
+}
+
+#error-message{
+  color: #ff4136;
+  /* display: none; */
+  margin: 0.3em 0em;
+}
+
+span.gid{
+  font-family: monospace;
+}
+
+section.download-details{
+  /*display: none;*/
+}
+
+p.download-files label{
+  display: block;
+}
+
+div.template{
+  display: none;
+}
