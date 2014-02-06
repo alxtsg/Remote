@@ -227,7 +227,7 @@
         };
       xhrHelper(requestBody, successCallback, errorCallback);
     },
-    
+
     // Update download task specified by GID.
     updateDownload = function(gid){
       var files,
@@ -305,8 +305,20 @@
               Mustache.render(downloadTaskTemplate, downloadDetails);
             container.innerHTML = downloadTask;
             container.id = "download-" + download.gid;
-            // Append container to document fragment before binding functions.
+            // Append container to document fragment before updating download 
+            // details and binding functions.
             docFragment.appendChild(container);
+            // Update download details, check the checkbox if it has been 
+            // selected.
+            (function(){
+              var downloadFiles = docFragment.querySelectorAll(
+                "#download-files-" + download.gid + " input[type='checkbox']");
+              download.files.forEach(function(file, index){
+                if(file.selected === "true"){
+                  downloadFiles[index].checked = true;
+                }
+              });
+            }());
             // Bind function to show download details.
             docFragment.querySelector("#" + container.id).onclick = function(){
               showDownloadDetails(download.gid);
@@ -377,8 +389,20 @@
               Mustache.render(downloadTaskTemplate, downloadDetails);
             container.innerHTML = downloadTask;
             container.id = "download-" + download.gid;
-            // Append container to document fragment before binding functions.
+            // Append container to document fragment before updating download 
+            // details and binding functions.
             docFragment.appendChild(container);
+            // Update download details, check the checkbox if it has been 
+            // selected.
+            (function(){
+              var downloadFiles = docFragment.querySelectorAll(
+                "#download-files-" + download.gid + " input[type='checkbox']");
+              download.files.forEach(function(file, index){
+                if(file.selected === "true"){
+                  downloadFiles[index].checked = true;
+                }
+              });
+            }());
             // Bind function to show download details.
             docFragment.querySelector("#" + container.id).onclick = function(){
               showDownloadDetails(download.gid);
@@ -454,8 +478,20 @@
               Mustache.render(downloadTaskTemplate, downloadDetails);
             container.innerHTML = downloadTask;
             container.id = "download-" + download.gid;
-            // Append container to document fragment before binding functions.
+            // Append container to document fragment before updating download 
+            // details and binding functions.
             docFragment.appendChild(container);
+            // Update download details, check the checkbox if it has been 
+            // selected.
+            (function(){
+              var downloadFiles = docFragment.querySelectorAll(
+                "#download-files-" + download.gid + " input[type='checkbox']");
+              download.files.forEach(function(file, index){
+                if(file.selected === "true"){
+                  downloadFiles[index].checked = true;
+                }
+              });
+            }());
             // Bind function to show download details.
             docFragment.querySelector("#" + container.id).onclick = function(){
               showDownloadDetails(download.gid);
