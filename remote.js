@@ -183,12 +183,38 @@
       xhrHelper(requestBody, successCallback, errorCallback);
     },
     
-    stopDownload = function(){
-      window.console.log("To be implemented - stop download.");
+    // Stop download task specified by GID.
+    stopDownload = function(gid){
+      var requestBody = {
+        id: Date.now(),
+        jsonrpc: "2.0",
+        method: "aria2.forceRemove",
+        params: [gid]
+        },
+        successCallback = function(){
+          getDownloads();
+        },
+        errorCallback = function(){
+          showErrorMessage("Unable to stop download.");
+        };
+      xhrHelper(requestBody, successCallback, errorCallback);
     },
     
-    removeDownload = function(){
-      window.console.log("To be implemented - remove download.");
+    // Remove download task specified by GID.
+    removeDownload = function(gid){
+      var requestBody = {
+        id: Date.now(),
+        jsonrpc: "2.0",
+        method: "aria2.removeDownloadResult",
+        params: [gid]
+        },
+        successCallback = function(){
+          getDownloads();
+        },
+        errorCallback = function(){
+          showErrorMessage("Unable to remove download.");
+        };
+      xhrHelper(requestBody, successCallback, errorCallback);
     },
     
     updateDownload = function(){
@@ -313,7 +339,6 @@
             startOrPauseButton.onclick = function(){
               if(download.status === "paused"){
                 resumeDownload(download.gid);
-                getDownloads();
               }else{
                 showErrorMessage("Cannot start non-paused download task.");
               }
@@ -322,7 +347,6 @@
               document.getElementById("download-stop-" + download.gid);
             stopButton.onclick = function(){
               stopDownload(download.gid);
-              getDownloads();
             };
           });
         },
@@ -383,7 +407,6 @@
               document.getElementById("download-stop-" + download.gid);
             stopButton.onclick = function(){
               removeDownload(download.gid);
-              getDownloads();
             };
           });
         },
