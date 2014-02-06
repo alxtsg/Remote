@@ -1,10 +1,11 @@
 (function(){
   "use strict";
   
-  // Reference to external libraries.
-  var Mustache = window.Mustache,
+  // Reference to external libraries (base64-min.js).
+  var Base64 = window.Base64,
   
-    Base64 = window.Base64,
+    // Reference to external libraries (mustache.js).
+    Mustache = window.Mustache,
     
     // Endpoint of RPC interface of aria2.
     rpcEndpoint = null,
@@ -141,14 +142,36 @@
     
     // Add download task by URL.
     addDownloadByUrl = function(url){
-      window.console.log(url);
-      window.console.log("To be implemented.");
+      var requestBody = {
+        id: Date.now(),
+        jsonrpc: "2.0",
+        method: "aria2.addUri",
+        params: [[url]]
+        },
+        successCallback = function(){
+          getDownloads();
+        },
+        errorCallback = function(){
+          showErrorMessage("Unable to add download task by URL.");
+        };
+      xhrHelper(requestBody, successCallback, errorCallback);
     },
     
     // Add download task by BitTorrent file.
     addDownloadByTorrent = function(fileInBase64){
-      window.console.log(fileInBase64);
-      window.console.log("To be implemented.");
+      var requestBody = {
+        id: Date.now(),
+        jsonrpc: "2.0",
+        method: "aria2.addTorrent",
+        params: [fileInBase64]
+        },
+        successCallback = function(){
+          getDownloads();
+        },
+        errorCallback = function(){
+          showErrorMessage("Unable to add download task by BitTorrent file.");
+        };
+      xhrHelper(requestBody, successCallback, errorCallback);
     },
     
     // Get statistics.
