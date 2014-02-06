@@ -33,7 +33,7 @@ span.gid{
 }
 
 section.download-details{
-  /*display: none;*/
+  display: none;
 }
 
 p.download-files label{

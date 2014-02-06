@@ -80,7 +80,18 @@
     
     // Show download details of a download specified with GID.
     showDownloadDetails = function(gid){
-      window.console.log("To be implemented - show download details.");
+      var details = document.querySelectorAll("section.download-details"),
+        index = 0,
+        detailsId = null;
+      while(index < details.length){
+        detailsId = "download-details-" + gid;
+        if(details[index].id === detailsId){
+          details[index].style.display = "block";
+        }else{
+          details[index].style.display = "none";
+        }
+        index += 1;
+      }
     },
     
     /*
@@ -295,6 +306,10 @@
             container.id = "download-" + download.gid;
             // Append container to active downloads list.
             activeDownloads.appendChild(container);
+            // Bind function to show download details.
+            document.getElementById(container.id).onclick = function(){
+              showDownloadDetails(download.gid);
+            };
             // Bind functions to start/ pause button and stop button.
             startOrPauseButton = 
               document.getElementById("download-startOrPause-" + download.gid);
@@ -360,6 +375,10 @@
             container.id = "download-" + download.gid;
             // Append container to inactive downloads list.
             inactiveDownloads.appendChild(container);
+            // Bind function to show download details.
+            document.getElementById(container.id).onclick = function(){
+              showDownloadDetails(download.gid);
+            };
             // Bind functions to start/ pause button and stop button.
             startOrPauseButton = 
               document.getElementById("download-startOrPause-" + download.gid);
@@ -430,6 +449,10 @@
             container.id = "download-" + download.gid;
             // Append container to inactive downloads list.
             inactiveDownloads.appendChild(container);
+            // Bind function to show download details.
+            document.getElementById(container.id).onclick = function(){
+              showDownloadDetails(download.gid);
+            };
             // Bind functions to stop button.
             stopButton = 
               document.getElementById("download-stop-" + download.gid);
