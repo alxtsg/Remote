@@ -94,6 +94,20 @@
       }
     },
     
+    // Check the checkboxes in download details which the corresponding files 
+    // has been selected.
+    checkSelectedFiles = function(docFragment, gid, files){
+      var downloadFiles = docFragment.querySelectorAll(
+        "#download-files-" + gid + " input[type='checkbox']");
+      files.forEach(function(file, index){
+        if(file.selected === "true"){
+          downloadFiles[index].checked = true;
+        }else{
+          downloadFiles[index].checked = false;
+        }
+      });
+    },
+    
     /*
       Core.
     */
@@ -310,15 +324,7 @@
             docFragment.appendChild(container);
             // Update download details, check the checkbox if it has been 
             // selected.
-            (function(){
-              var downloadFiles = docFragment.querySelectorAll(
-                "#download-files-" + download.gid + " input[type='checkbox']");
-              download.files.forEach(function(file, index){
-                if(file.selected === "true"){
-                  downloadFiles[index].checked = true;
-                }
-              });
-            }());
+            checkSelectedFiles(docFragment, download.gid, download.files);
             // Bind function to show download details.
             docFragment.querySelector("#" + container.id).onclick = function(){
               showDownloadDetails(download.gid);
@@ -394,15 +400,7 @@
             docFragment.appendChild(container);
             // Update download details, check the checkbox if it has been 
             // selected.
-            (function(){
-              var downloadFiles = docFragment.querySelectorAll(
-                "#download-files-" + download.gid + " input[type='checkbox']");
-              download.files.forEach(function(file, index){
-                if(file.selected === "true"){
-                  downloadFiles[index].checked = true;
-                }
-              });
-            }());
+            checkSelectedFiles(docFragment, download.gid, download.files);
             // Bind function to show download details.
             docFragment.querySelector("#" + container.id).onclick = function(){
               showDownloadDetails(download.gid);
@@ -483,15 +481,7 @@
             docFragment.appendChild(container);
             // Update download details, check the checkbox if it has been 
             // selected.
-            (function(){
-              var downloadFiles = docFragment.querySelectorAll(
-                "#download-files-" + download.gid + " input[type='checkbox']");
-              download.files.forEach(function(file, index){
-                if(file.selected === "true"){
-                  downloadFiles[index].checked = true;
-                }
-              });
-            }());
+            checkSelectedFiles(docFragment, download.gid, download.files);
             // Bind function to show download details.
             docFragment.querySelector("#" + container.id).onclick = function(){
               showDownloadDetails(download.gid);
