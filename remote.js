@@ -158,7 +158,7 @@
         params: [gid]
         },
         successCallback = function(){
-          return;
+          getDownloads();
         },
         errorCallback = function(){
           showErrorMessage("Unable to pause download.");
@@ -175,7 +175,7 @@
         params: [gid]
         },
         successCallback = function(){
-          return;
+          getDownloads();
         },
         errorCallback = function(){
           showErrorMessage("Unable to resume download.");
@@ -245,13 +245,11 @@
               document.getElementById("download-startOrPause-" + download.gid);
             startOrPauseButton.onclick = function(){
               forcePauseDownload(download.gid);
-              getDownloads();
             };
             stopButton = 
               document.getElementById("download-stop-" + download.gid);
             stopButton.onclick = function(){
               stopDownload(download.gid);
-              getDownloads();
             };
           });
         },
