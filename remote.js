@@ -169,10 +169,6 @@
       window.console.log("To be implemented - update download.");
     },
     
-    purgeDownloads = function(){
-      window.console.log("To be implemented - purge download.");
-    },
-    
     // Get active download tasks.
     getActiveDownloads = function(){
       var requestBody = {
