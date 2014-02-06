@@ -274,6 +274,7 @@
             var fileInfos = [],
               downloadDetails = null,
               downloadTask = null,
+              docFragment = document.createDocumentFragment(),
               container = document.createElement("div"),
               startOrPauseButton = null,
               stopButton = null;
@@ -304,23 +305,25 @@
               Mustache.render(downloadTaskTemplate, downloadDetails);
             container.innerHTML = downloadTask;
             container.id = "download-" + download.gid;
-            // Append container to active downloads list.
-            activeDownloads.appendChild(container);
+            // Append container to document fragment before binding functions.
+            docFragment.appendChild(container);
             // Bind function to show download details.
-            document.getElementById(container.id).onclick = function(){
+            docFragment.querySelector("#" + container.id).onclick = function(){
               showDownloadDetails(download.gid);
             };
             // Bind functions to start/ pause button and stop button.
-            startOrPauseButton = 
-              document.getElementById("download-startOrPause-" + download.gid);
+            startOrPauseButton = docFragment.querySelector(
+              "#download-startOrPause-" + download.gid);
             startOrPauseButton.onclick = function(){
               forcePauseDownload(download.gid);
             };
-            stopButton = 
-              document.getElementById("download-stop-" + download.gid);
+            stopButton = docFragment.querySelector(
+              "#download-stop-" + download.gid);
             stopButton.onclick = function(){
               stopDownload(download.gid);
             };
+            // Append document fragment to active downloads list.
+            activeDownloads.appendChild(docFragment);
           });
         },
         errorCallback = function(){
@@ -343,6 +346,7 @@
             var fileInfos = [],
               downloadDetails = null,
               downloadTask = null,
+              docFragment = document.createDocumentFragment(),
               container = document.createElement("div"),
               startOrPauseButton = null,
               stopButton = null;
@@ -373,15 +377,15 @@
               Mustache.render(downloadTaskTemplate, downloadDetails);
             container.innerHTML = downloadTask;
             container.id = "download-" + download.gid;
-            // Append container to inactive downloads list.
-            inactiveDownloads.appendChild(container);
+            // Append container to document fragment before binding functions.
+            docFragment.appendChild(container);
             // Bind function to show download details.
-            document.getElementById(container.id).onclick = function(){
+            docFragment.querySelector("#" + container.id).onclick = function(){
               showDownloadDetails(download.gid);
             };
             // Bind functions to start/ pause button and stop button.
-            startOrPauseButton = 
-              document.getElementById("download-startOrPause-" + download.gid);
+            startOrPauseButton = docFragment.querySelector(
+              "#download-startOrPause-" + download.gid);
             // If download task is being paused, the button will resume 
             // download process, otherwise show error message.
             startOrPauseButton.onclick = function(){
@@ -392,10 +396,12 @@
               }
             };
             stopButton = 
-              document.getElementById("download-stop-" + download.gid);
+              docFragment.querySelector("#download-stop-" + download.gid);
             stopButton.onclick = function(){
               stopDownload(download.gid);
             };
+            // Append document fragment to inactive downloads list.
+            inactiveDownloads.appendChild(docFragment);
           });
         },
         errorCallback = function(){
@@ -418,6 +424,7 @@
             var fileInfos = [],
               downloadDetails = null,
               downloadTask = null,
+              docFragment = document.createDocumentFragment(),
               container = document.createElement("div"),
               stopButton = null;
             // Extract paths of files.
@@ -447,18 +454,20 @@
               Mustache.render(downloadTaskTemplate, downloadDetails);
             container.innerHTML = downloadTask;
             container.id = "download-" + download.gid;
-            // Append container to inactive downloads list.
-            inactiveDownloads.appendChild(container);
+            // Append container to document fragment before binding functions.
+            docFragment.appendChild(container);
             // Bind function to show download details.
-            document.getElementById(container.id).onclick = function(){
+            docFragment.querySelector("#" + container.id).onclick = function(){
               showDownloadDetails(download.gid);
             };
             // Bind functions to stop button.
             stopButton = 
-              document.getElementById("download-stop-" + download.gid);
+              docFragment.querySelector("#download-stop-" + download.gid);
             stopButton.onclick = function(){
               removeDownload(download.gid);
             };
+            // Append document fragment to inactive downloads list.
+            inactiveDownloads.appendChild(container);
           });
         },
         errorCallback = function(){
