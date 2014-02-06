@@ -149,12 +149,38 @@
       }());
     },
     
+    // Force pause download task specified by GID.
     forcePauseDownload = function(gid){
-      window.console.log("To be implemented - force pause.");
+      var requestBody = {
+        id: Date.now(),
+        jsonrpc: "2.0",
+        method: "aria2.forcePause",
+        params: [gid]
+        },
+        successCallback = function(){
+          return;
+        },
+        errorCallback = function(){
+          showErrorMessage("Unable to pause download.");
+        };
+      xhrHelper(requestBody, successCallback, errorCallback);
     },
     
+    // Resume paused download task specified by GID.
     resumeDownload = function(gid){
-      window.console.log("To be implemented - resume download.");
+      var requestBody = {
+        id: Date.now(),
+        jsonrpc: "2.0",
+        method: "aria2.unpause",
+        params: [gid]
+        },
+        successCallback = function(){
+          return;
+        },
+        errorCallback = function(){
+          showErrorMessage("Unable to resume download.");
+        };
+      xhrHelper(requestBody, successCallback, errorCallback);
     },
     
     stopDownload = function(){
@@ -288,7 +314,7 @@
             // download process, otherwise show error message.
             startOrPauseButton.onclick = function(){
               if(download.status === "paused"){
-                resumeDownload();
+                resumeDownload(download.gid);
                 getDownloads();
               }else{
                 showErrorMessage("Cannot start non-paused download task.");
