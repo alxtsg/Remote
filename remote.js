@@ -1,8 +1,13 @@
 (function(){
   "use strict";
   
-  // Endpoint of RPC interface of aria2.
-  var rpcEndpoint = null,
+  // Reference to external libraries.
+  var Mustache = window.Mustache,
+  
+    Base64 = window.Base64,
+    
+    // Endpoint of RPC interface of aria2.
+    rpcEndpoint = null,
   
     // Credentials for authentication with aria2 RPC interface.
     credentials = null,
