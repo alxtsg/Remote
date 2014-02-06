@@ -217,8 +217,37 @@
       xhrHelper(requestBody, successCallback, errorCallback);
     },
     
-    updateDownload = function(){
-      window.console.log("To be implemented - update download.");
+    // Update download task specified by GID.
+    updateDownload = function(gid){
+      var files,
+        selectedFileIndices = [],
+        selectedFileIndicesString = null,
+        requestBody = null,
+        successCallBack = function(){
+          getDownloads();
+        },
+        errorCallback = function(){
+          showErrorMessage("Unable to update download.");
+        };
+      // Get indices of selected files.
+      files = Array.prototype.slice.call(
+        document.getElementById("download-files-" + gid).querySelectorAll(
+          "input[type='checkbox']"));
+      files.forEach(function(file, index){
+        if(file.checked){
+          selectedFileIndices.push(index);
+        }
+      });
+      selectedFileIndicesString = JSON.stringify(selectedFileIndices);
+      selectedFileIndicesString = 
+        selectedFileIndicesString.slice(1, selectedFileIndices.length - 1);
+      requestBody = {
+        jsonrpc: "2.0",
+        method: "aria2.changeOption",
+        id: Date.now(),
+        params: [gid, {"select-file": selectedFileIndicesString}]
+      };
+      xhrHelper(requestBody, successCallBack, errorCallback);
     },
     
     // Get active download tasks.
@@ -371,7 +400,6 @@
               downloadDetails = null,
               downloadTask = null,
               container = document.createElement("div"),
-              startOrPauseButton = null,
               stopButton = null;
             // Extract paths of files.
             download.files.forEach(function(file){
