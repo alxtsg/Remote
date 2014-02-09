@@ -609,6 +609,8 @@
       return false;
     }
     addDownloadByUrl(url);
+    // Clear URL in the input box.
+    document.getElementById("new-download-url").value = null;
     return false;
   };
   
