@@ -610,7 +610,7 @@
     }
     addDownloadByUrl(url);
     // Clear URL in the input box.
-    document.getElementById("new-download-url").value = null;
+    document.getElementById("new-download-url").value = "";
     return false;
   };
   
