@@ -357,8 +357,9 @@
               downloadSpeed: ((download.downloadSpeed / 1000 * 8).toFixed(2)) +
                 " kb/s",
               completePercentage: 
-                (((download.completedLength / download.totalLength) 
-                  * 100).toFixed(2)) + " %",
+                ((
+                  (download.completedLength / download.totalLength) * 100
+                ).toFixed(2)) + " %",
               status: download.status,
               downloadFiles: fileInfos,
               canBePaused: true,
@@ -436,8 +437,9 @@
               downloadSpeed: ((download.downloadSpeed / 1000 * 8).toFixed(2)) +
                 " kb/s",
               completePercentage: 
-                (((download.completedLength / download.totalLength) 
-                  * 100).toFixed(2)) + " %",
+                ((
+                  (download.completedLength / download.totalLength) * 100
+                ).toFixed(2)) + " %",
               status: download.status,
               downloadFiles: fileInfos,
               canBePaused: true,
@@ -534,8 +536,9 @@
               downloadSpeed: ((download.downloadSpeed / 1000 * 8).toFixed(2)) +
                 " kb/s",
               completePercentage: 
-                (((download.completedLength / download.totalLength) 
-                  * 100).toFixed(2)) + " %",
+                ((
+                  (download.completedLength / download.totalLength) * 100
+                ).toFixed(2)) + " %",
               status: download.status,
               downloadFiles: fileInfos,
               canBePaused: false,
@@ -651,7 +654,7 @@
   };
   
   // Show command panel for user to configure the settings.
-  document.getElementById("settings-button").onclick = function(){
+  document.getElementById("settings-link").onclick = function(){
     hideErrorMessage();
     hideCommandPanels();
     document.getElementById("settings-panel").style.display = "block";
@@ -675,25 +678,10 @@
     }
     hideCommandPanels();
     // Show statistics after configuring settings.
-    document.getElementById("statistics-panel").style.display = "block";
     getStatistics();
     // Get download tasks.
     getDownloads();
     return false;
-  };
-  
-  // Show command panel for displaying statistics.
-  document.getElementById("statistics-button").onclick = function(){
-    hideErrorMessage();
-    // If RPC interface endpoint has not been configured, show error message and
-    // stop.
-    if(rpcEndpoint === null){
-      showErrorMessage("Host and port of aria2 are not configured.");
-      return;
-    }
-    hideCommandPanels();
-    document.getElementById("statistics-panel").style.display = "block";
-    getStatistics();
   };
   
   // Refresh statistics and list of download tasks.
@@ -705,6 +693,7 @@
       showErrorMessage("Host and port of aria2 are not configured.");
       return;
     }
+    hideCommandPanels();
     getStatistics();
     getDownloads();
   };

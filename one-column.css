@@ -1,0 +1,16 @@
+#body-panel {
+  bottom: 0em;
+  left: 0em;
+  overflow: auto;
+  position: fixed;
+  right: 0em;
+  top: 2em;
+}
+
+#body-panel-wrapper {
+  padding: 0.5em;
+}
+
+#body-panel-wrapper p:first-child{
+  margin-top: 0em;
+}
