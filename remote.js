@@ -86,7 +86,7 @@
     
     // Show download details of a download specified with GID.
     showDownloadDetails = function(gid){
-      var details = document.querySelectorAll("section.download-details"),
+      var details = document.querySelectorAll("div.download-details"),
         index = 0,
         detailsId = null;
       while(index < details.length){
