@@ -2,113 +2,98 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width" />
   <title>Remote</title>
-  <link rel="stylesheet" type="text/css" href="common.css" />
-  <link rel="stylesheet" type="text/css" href="one-column.css" />
   <link rel="stylesheet" type="text/css" href="index.css" />
 </head>
 <body>
-  <div id="body-panel">
-    <div id="body-panel-wrapper">
-      <p>
-        Version: <span id="aria2-version">N/A</span>
-        Upload: <span id="global-upload-speed" class="speed">N/A</span>
-        Download: <span id="global-download-speed" class="speed">N/A</span>
-      </p>
-      <div id="command-panel">
-        <button id="add-by-url-button">Add by URL</button>
-        <button id="add-by-torrent-button">Add by torrent</button>
-        <button id="refresh-button">Refresh</button>
-        <form id="add-by-url-panel" class="command-panel">
-          <label>
-            URL
-            <input id="new-download-url" type="text" placeholder="http://www.example.com/file.torrent" required="required" />
-          </label>
-          <input type="submit" value="Add" />
-        </form>
-        <form id="add-by-torrent-panel" class="command-panel">
-          <label>
-            Torrent file
-            <input id="new-download-torrent" type="file" accept="application/x-bittorrent" required="required" />
-          </label>
-          <input type="submit" value="Add" />
-        </form>
-        <form id="settings-panel" class="command-panel">
-          <label>
-            Host
-            <input id="aria2-host" type="text" placeholder="127.0.0.1" required="required" />
-          </label>
-          <label>
-            Port
-            <input id="aria2-port" type="text" placeholder="6800" required="required" />
-          </label>
-          <label>
-            Username
-            <input id="aria2-username" type="text" />
-          </label>
-          <label>
-            Password
-            <input id="aria2-password" type="password" />
-          </label>
-          <input type="submit" value="Save" />
-        </form>
-      </div>
-      <div id="error-message"></div>
-      <div id="downloads-box">
-        <div>
-          <h2>Active downloads</h2>
-          <div id="active-downloads"></div>
-        </div>
-        <div>
-          <h2>Inactive downloads</h2>
-          <div id="inactive-downloads"></div>
-        </div>
-      </div>
-      <div id="download-task-template" class="template">
-        <div id="download-{{gid}}">
-          <p>
-            <span>
-              GID: <span class="gid">{{gid}}</span>
-              Upload: <span class="speed">{{uploadSpeed}}</span>
-              Download: <span class="speed">{{downloadSpeed}}</span>
-              Percentage: <span class="complete-percentage">{{completePercentage}}</span>
-              Status: <span class="download-status">{{status}}</span>
-              {{#canBePaused}}
-                <button id="download-startOrPause-{{gid}}">Start / Pause</button> 
-              {{/canBePaused}}
-              <button id="download-stop-{{gid}}">Stop</button>
-            </span>
-          </p>
-          <div class="download-details" id="download-details-{{gid}}">
-            <p class="download-files" id="download-files-{{gid}}">
-              {{#downloadFiles}}
-                <label><input type="checkbox">{{fileName}}</label>
-              {{/downloadFiles}}
-            </p>
-            <p>
-              {{#canBeUpdated}}
-                <button id="download-{{gid}}-select-all-button">Select all</button>
-                <button id="download-{{gid}}-unselect-all-button">Unselect all</button>
-                <button id="download-{{gid}}-save-button">Save</button>
-              {{/canBeUpdated}}      
-            </p>
-          </div>
-        </div>
-      </div>
+  <div id="top-panel">
+    <h1>Remote</h1>
+    <p>
+      Version: <span id="aria2-version">N/A</span>
+      Upload: <span id="global-upload-speed" class="speed">N/A</span>
+      Download: <span id="global-download-speed" class="speed">N/A</span>
+    </p>
+  </div>
+  <div id="command-panel">
+    <button id="add-by-url-button">Add by URL</button>
+    <button id="add-by-torrent-button">Add by torrent file</button>
+    <button id="refresh-button">Refresh</button>
+    <button id="settings-button">Settings</button>
+    <form id="add-by-url-panel" class="command-panel">
+      <label>
+        URL
+        <input id="new-download-url" type="text" placeholder="http://www.example.com/file.torrent" required="required" />
+      </label>
+      <input type="submit" value="Add" />
+    </form>
+    <form id="add-by-torrent-panel" class="command-panel">
+      <label>
+        Torrent file
+        <input id="new-download-torrent" type="file" accept="application/x-bittorrent" required="required" />
+      </label>
+      <input type="submit" value="Add" />
+    </form>
+    <form id="settings-panel" class="command-panel">
+      <label>
+        Host
+        <input id="aria2-host" type="text" placeholder="127.0.0.1" required="required" />
+      </label>
+      <label>
+        Port
+        <input id="aria2-port" type="text" placeholder="6800" required="required" />
+      </label>
+      <label>
+        Token
+        <input id="aria2-token" type="password" />
+      </label>
+      <input type="submit" value="Save" />
+    </form>
+  </div>
+  <div id="error-message"></div>
+  <div id="downloads-box">
+    <div>
+      <h2>Active downloads</h2>
+      <div id="active-downloads"></div>
+    </div>
+    <div>
+      <h2>Inactive downloads</h2>
+      <div id="inactive-downloads"></div>
     </div>
   </div>
-  <div id="header-panel">
-    <div id="header-content-panel">
-      <div id="title-panel">
-        <a id="site-title" href="#">Remote</a>
-      </div>
-      <div id="misc-panel">
-        <a id="settings-link" href="#">Settings</a>
+  <div id="download-task-template" class="template">
+    <div id="download-{{gid}}">
+      <p>
+        <span>
+          GID: <span class="gid">{{gid}}</span>
+          Upload: <span class="speed">{{uploadSpeed}}</span>
+          Download: <span class="speed">{{downloadSpeed}}</span>
+          Percentage: <span class="complete-percentage">{{completePercentage}}</span>
+          Status: <span class="download-status">{{status}}</span>
+          {{#canBePaused}}
+            <button id="download-startOrPause-{{gid}}">Start / Pause</button> 
+          {{/canBePaused}}
+          <button id="download-stop-{{gid}}">Stop</button>
+        </span>
+      </p>
+      <div class="download-details" id="download-details-{{gid}}">
+        <p class="download-files" id="download-files-{{gid}}">
+          {{#downloadFiles}}
+            <label><input type="checkbox">{{fileName}}</label>
+          {{/downloadFiles}}
+        </p>
+        <p>
+          {{#canBeUpdated}}
+            <button id="download-{{gid}}-select-all-button">Select all</button>
+            <button id="download-{{gid}}-unselect-all-button">Unselect all</button>
+            <button id="download-{{gid}}-save-button">Save</button>
+          {{/canBeUpdated}}      
+        </p>
       </div>
     </div>
   </div>
   <script type="application/javascript" src="//cdnjs.cloudflare.com/ajax/libs/Base64/0.3.0/base64.min.js"></script>
   <script type="application/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js"></script>
-  <script type="application/javascript" src="remote.js"></script>
+  <script type="application/javascript" src="index.js"></script>
 </body>
 </html>

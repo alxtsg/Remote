@@ -1,3 +1,9 @@
+body{
+  background-color: black;
+  color: #d3d3d3;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 #aria2-version, span.speed, span.gid, span.complete-percentage, 
   span.download-status{
   margin-right: 3em;
