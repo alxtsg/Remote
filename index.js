@@ -1,9 +1,8 @@
 (function(){
-  
+
   'use strict';
 
-  var btoa = window.btoa,
-    Mustache = window.Mustache,
+  var Mustache = window.Mustache,
 
     // aria2 RPC endpoint.
     rpcEndpoint = null,
@@ -15,21 +14,29 @@
     downloadTaskTemplate =
       document.getElementById('download-task-template').innerHTML,
 
-    // Declaration of function to get download tasks.
+    // Placeholder of function which gets download tasks.
     getDownloads = null,
 
-    /*
-      Utilities.
+   /**
+    * Utility functions.
     */
 
-    // Clear children nodes.
+    /**
+     * Clears children nodes of a given node.
+     *
+     * @param {Node} node The node whose children node wll be removed.
+     */
     clearChildren = function(node){
       while(node.hasChildNodes()){
         node.removeChild(node.firstChild);
       }
     },
 
-    // Show error message.
+    /**
+     * Shows error message.
+     *
+     * @param {String} errorMessage Error message.
+     */
     showErrorMessage = function(errorMessage){
       var errorMessageBox = document.getElementById('error-message');
       clearChildren(errorMessageBox);
@@ -37,20 +44,50 @@
       errorMessageBox.style.display = 'block';
     },
 
-    // Hide error message.
+    /**
+     * Hides error message.
+     */
     hideErrorMessage = function(){
       document.getElementById('error-message').style.display = 'none';
     },
 
-    // Send request to aria2 RPC interface.
-    xhrHelper = function(requestBody, successCallback, errorCallback){
-      var xhr = new XMLHttpRequest();
+    /**
+     * XMLHttpRequest helper function, helps sending request to aria2 RPC
+     * interface.
+     *
+     * @param {String} method RPC method.
+     * @param {Array} parameters RPC method parameters. Do not include RPC
+     *                           authentication token as it is being added
+     *                           automatically.
+     * @param {Function} successCallback Callback function to be invoked when
+     *                                   request has succeed. Expects first
+     *                                   parameter to be a JSON object which is
+     *                                   the response.
+     * @param {Function} errorCallback Callback function to be invoked when
+     *                                 request failed. Expects first parameter
+     *                                 to be a JSON object which is the
+     *                                 response.
+     */
+    xhrHelper = function(method, parameters, successCallback, errorCallback){
+      var xhr = new XMLHttpRequest(),
+        requestBody = {
+          jsonrpc: '2.0',
+          method: method,
+          params: parameters,
+          id: Date.now()
+        };
+      // If RPC authentication token is specified, add it to the head of array
+      // of parameters.
+      if(rpcAuthenticationToken !== null){
+        requestBody.params =
+          [rpcAuthenticationToken].concat(requestBody.params);
+      }
       xhr.onreadystatechange = function(){
         if(xhr.readyState === 4){
           if(xhr.status === 200){
             successCallback(JSON.parse(xhr.responseText));
           }else{
-            errorCallback();
+            errorCallback(JSON.parse(xhr.responseText));
           }
         }
       };
@@ -58,7 +95,9 @@
       xhr.send(JSON.stringify(requestBody));
     },
 
-    // Hide all command panels.
+    /**
+     * Hides all command panels.
+     */
     hideCommandPanels = function(){
       var panels = document.querySelectorAll('.command-panel'),
         i = 0;
@@ -68,17 +107,25 @@
       }
     },
 
-    // Clear active downloads.
+    /**
+     * Clears the list of active downloads from screen.
+     */
     clearActiveDownloads = function(){
       clearChildren(document.getElementById('active-downloads'));
     },
 
-    // Clear inactive downloads.
+    /**
+     * Clears the list of inactive downloads from screen.
+     */
     clearInactiveDownloads = function(){
       clearChildren(document.getElementById('inactive-downloads'));
     },
 
-    // Show download details of a download specified with GID.
+    /**
+     * Shows download details of a download task.
+     *
+     * @param {String} gid GID of the download task.
+     */
     showDownloadDetails = function(gid){
       var details = document.querySelectorAll('div.download-details'),
         index = 0,
@@ -94,8 +141,14 @@
       }
     },
 
-    // Check the checkboxes in download details which the corresponding files
-    // has been selected.
+    /**
+     * Checks the checkboxes of files which are selected to be downloaded.
+     *
+     * @param {DocumentFragment} docFragment The DocumentFragment holding
+     *                                       download details DOM tree.
+     * @param {String} gid GID of the download task.
+     * @param {Array} files Objects representing files in the download task.
+     */
     checkSelectedFiles = function(docFragment, gid, files){
       var downloadFiles = docFragment.querySelectorAll(
         '#download-files-' + gid + ' input[type="checkbox"]');
@@ -108,7 +161,11 @@
       });
     },
 
-    // Select all files in a download task specified by GID.
+    /**
+     * Selects (checks) all files in a download task.
+     *
+     * @param {String} gid GID of the download task.
+     */
     selectAllFiles = function(gid){
       var files = document.querySelectorAll(
         '#download-files-' + gid + ' input[type="checkbox"]'),
@@ -119,7 +176,11 @@
       }
     },
 
-    // Unselected all files in a download task specified by GID.
+    /**
+     * Unselects (unchecks) all files in a download task.
+     *
+     * @param {String} gid GID of the download task.
+     */
     unselectAllFiles = function(gid){
       var files = document.querySelectorAll(
         '#download-files-' + gid + ' input[type="checkbox"]'),
@@ -130,53 +191,54 @@
       }
     },
 
-    /*
-      Core.
+   /**
+    * Core functions.
     */
 
-    // Add download task by URL.
+    /**
+     * Adds a download task by URL.
+     *
+     * @param {String} url File URL.
+     */
     addDownloadByUrl = function(url){
-      var requestBody = {
-          id: Date.now(),
-          jsonrpc: '2.0',
-          method: 'aria2.addUri',
-          params: [rpcAuthenticationToken, url]
-        },
+      var parameters = [
+          url
+        ],
         successCallback = function(){
           getDownloads();
         },
         errorCallback = function(){
           showErrorMessage('Unable to add download task by URL.');
         };
-      xhrHelper(requestBody, successCallback, errorCallback);
+      xhrHelper('aria2.addUri', parameters, successCallback, errorCallback);
     },
 
-    // Add download task by BitTorrent file.
+    /**
+     * Adds a download task by BitTorrent file.
+     *
+     * @param {String} fileInBase64 The BitTorrent file encoded in Base64
+     *                              representation.
+     */
     addDownloadByTorrent = function(fileInBase64){
-      var requestBody = {
-        id: Date.now(),
-        jsonrpc: '2.0',
-        method: 'aria2.addTorrent',
-        params: [fileInBase64]
-        },
+      var parameters = [
+          fileInBase64
+        ],
         successCallback = function(){
           getDownloads();
         },
         errorCallback = function(){
           showErrorMessage('Unable to add download task by BitTorrent file.');
         };
-      xhrHelper(requestBody, successCallback, errorCallback);
+      xhrHelper('aria2.addTorrent', parameters, successCallback, errorCallback);
     },
 
-    // Get statistics.
+    /**
+     * Gets statistics.
+     */
     getStatistics = function(){
       // Get version.
       (function(){
-        var requestBody = {
-          id: Date.now(),
-          jsonrpc: '2.0',
-          method: 'aria2.getVersion'
-          },
+        var parameters = [],
           successCallback = function(response){
             var version = document.getElementById('aria2-version');
             clearChildren(version);
@@ -186,15 +248,12 @@
           errorCallback = function(){
             showErrorMessage('Unable to get aria2 version.');
           };
-        xhrHelper(requestBody, successCallback, errorCallback);
+        xhrHelper(
+          'aria2.getVersion', parameters, successCallback, errorCallback);
       }());
       // Get global traffic.
       (function(){
-        var requestBody = {
-          id: Date.now(),
-          jsonrpc: '2.0',
-          method: 'aria2.getGlobalStat'
-          },
+        var parameters = [],
           successCallback = function(response){
             var uploadSpeed = document.getElementById('global-upload-speed'),
               downloadSpeed = document.getElementById('global-download-speed'),
@@ -214,84 +273,95 @@
           errorCallback = function(){
             showErrorMessage('Unable to get global traffic statistics.');
           };
-        xhrHelper(requestBody, successCallback, errorCallback);
+        xhrHelper(
+          'aria2.getGlobalStat', parameters, successCallback, errorCallback);
       }());
     },
 
-    // Force pause download task specified by GID.
+    /**
+     * Forces a download task to be paused.
+     *
+     * @param {String} gid GID of the download task.
+     */
     forcePauseDownload = function(gid){
-      var requestBody = {
-        id: Date.now(),
-        jsonrpc: '2.0',
-        method: 'aria2.forcePause',
-        params: [gid]
-        },
+      var parameters = [
+          gid
+        ],
         successCallback = function(){
           getDownloads();
         },
         errorCallback = function(){
           showErrorMessage('Unable to pause download.');
         };
-      xhrHelper(requestBody, successCallback, errorCallback);
+      xhrHelper('aria2.forcePause', parameters, successCallback, errorCallback);
     },
 
-    // Resume paused download task specified by GID.
+    /**
+     * Resumes a download task.
+     *
+     * @param {String} gid GID of the download task.
+     */
     resumeDownload = function(gid){
-      var requestBody = {
-        id: Date.now(),
-        jsonrpc: '2.0',
-        method: 'aria2.unpause',
-        params: [gid]
-        },
+      var parameters = [
+          gid
+        ],
         successCallback = function(){
           getDownloads();
         },
         errorCallback = function(){
           showErrorMessage('Unable to resume download.');
         };
-      xhrHelper(requestBody, successCallback, errorCallback);
+      xhrHelper('aria2.unpause', parameters, successCallback, errorCallback);
     },
 
-    // Stop download task specified by GID.
+    /**
+     * Stops a download task.
+     *
+     * @param {String} gid GID of the download task.
+     */
     stopDownload = function(gid){
-      var requestBody = {
-        id: Date.now(),
-        jsonrpc: '2.0',
-        method: 'aria2.forceRemove',
-        params: [gid]
-        },
+      var parameters = [
+          gid
+        ],
         successCallback = function(){
           getDownloads();
         },
         errorCallback = function(){
           showErrorMessage('Unable to stop download.');
         };
-      xhrHelper(requestBody, successCallback, errorCallback);
+      xhrHelper(
+        'aria2.forceRemove', parameters, successCallback, errorCallback);
     },
 
-    // Remove download task specified by GID.
+    /**
+     * Removes a download task.
+     *
+     * @param {String} gid GID of the download task.
+     */
     removeDownload = function(gid){
-      var requestBody = {
-        id: Date.now(),
-        jsonrpc: '2.0',
-        method: 'aria2.removeDownloadResult',
-        params: [gid]
-        },
+      var parameters = [
+          gid
+        ],
         successCallback = function(){
           getDownloads();
         },
         errorCallback = function(){
           showErrorMessage('Unable to remove download.');
         };
-      xhrHelper(requestBody, successCallback, errorCallback);
+      xhrHelper('aria2.removeDownloadResult', parameters, successCallback,
+        errorCallback);
     },
 
-    // Update download task specified by GID.
+    /**
+     * Updates a download task.
+     *
+     * @param {String} gid GID of the download task.
+     */
     updateDownload = function(gid){
-      var files,
+      var files = null,
         selectedFileIndices = [],
         selectedFileIndicesString = null,
-        requestBody = null,
+        parameters = null,
         successCallBack = function(){
           getDownloads();
         },
@@ -311,22 +381,16 @@
       selectedFileIndicesString = JSON.stringify(selectedFileIndices);
       selectedFileIndicesString = selectedFileIndicesString.slice(
         1, selectedFileIndicesString.length - 1);
-      requestBody = {
-        jsonrpc: '2.0',
-        method: 'aria2.changeOption',
-        id: Date.now(),
-        params: [gid, {'select-file': selectedFileIndicesString}]
-      };
-      xhrHelper(requestBody, successCallBack, errorCallback);
+      parameters = [gid, {'select-file': selectedFileIndicesString}];
+      xhrHelper(
+        'aria2.changeOption', parameters, successCallBack, errorCallback);
     },
 
-    // Get active download tasks.
+    /**
+     * Gets active download tasks.
+     */
     getActiveDownloads = function(){
-      var requestBody = {
-        id: Date.now(),
-        jsonrpc: '2.0',
-        method: 'aria2.tellActive'
-        },
+      var parameters = [],
         successCallback = function(response){
           var activeDownloads = document.getElementById('active-downloads');
           response.result.forEach(function(download){
@@ -393,17 +457,20 @@
         errorCallback = function(){
           showErrorMessage('Unable to get active downloads.');
         };
-      xhrHelper(requestBody, successCallback, errorCallback);
+      xhrHelper('aria2.tellActive', parameters, successCallback, errorCallback);
     },
 
-    // Get waiting download tasks.
+    /**
+     * Gets waiting download tasks. This function assumes no more than 1000
+     * download tasks are waiting.
+     */
     getWaitingDownloads = function(){
-      var requestBody = {
-        id: Date.now(),
-        jsonrpc: '2.0',
-        method: 'aria2.tellWaiting',
-        params: [0, 1000]
-        },
+      var parameters = [
+          // Start from beginning, offset is zero.
+          0,
+          // Get at most 1000 waiting download tasks.
+          1000
+        ],
         successCallback = function(response){
           var inactiveDownloads = document.getElementById('inactive-downloads');
           response.result.forEach(function(download){
@@ -496,17 +563,21 @@
         errorCallback = function(){
           showErrorMessage('Unable to get waiting downloads.');
         };
-      xhrHelper(requestBody, successCallback, errorCallback);
+      xhrHelper(
+        'aria2.tellWaiting', parameters, successCallback, errorCallback);
     },
 
-    // Get stopped download tasks.
+    /**
+     * Gets stopped download tasks. This function assumes no more than 1000
+     * download tasks have been stopped.
+     */
     getStoppedDownloads = function(){
-      var requestBody = {
-        id: Date.now(),
-        jsonrpc: '2.0',
-        method: 'aria2.tellStopped',
-        params: [0, 1000]
-        },
+      var parameters = [
+          // Starts from beginning, offset is zero.
+          0,
+          // Get at most 1000 stopped download tasks.
+          1000
+        ],
         successCallback = function(response){
           var inactiveDownloads = document.getElementById('inactive-downloads');
           response.result.forEach(function(download){
@@ -567,10 +638,13 @@
         errorCallback = function(){
           showErrorMessage('Unable to get stopped downloads.');
         };
-      xhrHelper(requestBody, successCallback, errorCallback);
+      xhrHelper(
+        'aria2.tellStopped', parameters, successCallback, errorCallback);
     };
 
-  // Get download tasks.
+  /**
+   * Gets download tasks.
+   */
   getDownloads = function(){
     clearActiveDownloads();
     getActiveDownloads();
@@ -579,28 +653,32 @@
     getStoppedDownloads();
   };
 
-  /*
-    Binding user interface events to functions.
+ /**
+  * Bind functions to UI components events.
   */
 
-  // Show command panel for user to add download task by URL.
+  /**
+   * Shows command panel for user to add a download task by URL.
+   */
   document.getElementById('add-by-url-button').onclick = function(){
     hideErrorMessage();
     hideCommandPanels();
     document.getElementById('add-by-url-panel').style.display = 'block';
   };
 
-  // Handles submission of adding download task by URL.
+  /**
+   * Handles submission of adding download task by URL.
+   */
   document.getElementById('add-by-url-panel').onsubmit = function(){
     var url = document.getElementById('new-download-url').value;
     hideErrorMessage();
     // If RPC interface endpoint has not been configured, show error message and
-    // stop.
+    // cancel the submission.
     if(rpcEndpoint === null){
       showErrorMessage('Host and port of aria2 are not configured.');
       return false;
     }
-    // If URL is empty, show error message and stop.
+    // If URL is empty, show error message and cancel the submission.
     if(url === ''){
       showErrorMessage('Missing URL.');
       return false;
@@ -611,26 +689,31 @@
     return false;
   };
 
-  // Show command panel for user to add download task by BitTorrent file.
+  /**
+   * Shows command panel for user to add a download task by BitTorrent file.
+   */
   document.getElementById('add-by-torrent-button').onclick = function(){
     hideErrorMessage();
     hideCommandPanels();
     document.getElementById('add-by-torrent-panel').style.display = 'block';
   };
 
-  // Handles submission of adding download task by BitTorrent file.
+  /**
+   * Handles submission of adding download task by BitTorrent file.
+   */
   document.getElementById('add-by-torrent-panel').onsubmit = function(){
     var torrentFiles = document.getElementById('new-download-torrent').files,
       torrentFile = null,
       fileReader = null;
     hideErrorMessage();
     // If RPC interface endpoint has not been configured, show error message and
-    // stop.
+    // cancel the submission.
     if(rpcEndpoint === null){
       showErrorMessage('Host and port of aria2 are not configured.');
       return false;
     }
-    // If no files has been selected, show error message and stop.
+    // If no files has been selected, show error message and cancel the
+    // submission.
     if(torrentFiles.length === 0){
       showErrorMessage('Missing BitTorrent file.');
       return false;
@@ -647,14 +730,18 @@
     return false;
   };
 
-  // Show command panel for user to configure the settings.
-  document.getElementById('settings-link').onclick = function(){
+  /**
+   * Shows command panel for user to configure the settings.
+   */
+  document.getElementById('settings-button').onclick = function(){
     hideErrorMessage();
     hideCommandPanels();
     document.getElementById('settings-panel').style.display = 'block';
   };
 
-  // Handles saving of new configurations.
+  /**
+   * Handles submission of new configurations.
+   */
   document.getElementById('settings-panel').onsubmit = function(){
     var protocol = window.location.protocol,
       host = document.getElementById('aria2-host').value,
@@ -677,7 +764,9 @@
     return false;
   };
 
-  // Refresh statistics and list of download tasks.
+  /**
+   * Refreshes statistics and the list of download tasks.
+   */
   document.getElementById('refresh-button').onclick = function(){
     hideErrorMessage();
     // If RPC interface endpoint has not been configured, show error message and
@@ -691,6 +780,6 @@
     getDownloads();
   };
 
-  // Pre-compile download task template.
+  // Pre-compile the download task template.
   Mustache.parse(downloadTaskTemplate);
 }());
