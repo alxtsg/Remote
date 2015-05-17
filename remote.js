@@ -1,36 +1,33 @@
 (function(){
   "use strict";
-  
-  // Reference to external libraries (base64-min.js).
-  var Base64 = window.Base64,
-  
-    // Reference to external libraries (mustache.js).
+
+  var btoa = window.btoa,
     Mustache = window.Mustache,
-    
+
     // Endpoint of RPC interface of aria2.
     rpcEndpoint = null,
-  
+
     // Credentials for authentication with aria2 RPC interface.
     credentials = null,
-    
+
     // Pre-compiled download task template.
-    downloadTaskTemplate = 
+    downloadTaskTemplate =
       document.getElementById("download-task-template").innerHTML,
-      
+
     // Declaration of function to get download tasks.
     getDownloads = null,
 
     /*
       Utilities.
     */
-    
+
     // Clear children nodes.
     clearChildren = function(node){
       while(node.hasChildNodes()){
         node.removeChild(node.firstChild);
       }
     },
-    
+
     // Show error message.
     showErrorMessage = function(errorMessage){
       var errorMessageBox = document.getElementById("error-message");
@@ -38,12 +35,12 @@
       errorMessageBox.appendChild(document.createTextNode(errorMessage));
       errorMessageBox.style.display = "block";
     },
-    
+
     // Hide error message.
     hideErrorMessage = function(){
       document.getElementById("error-message").style.display = "none";
     },
-    
+
     // Send request to aria2 RPC interface.
     xhrHelper = function(requestBody, successCallback, errorCallback){
       var xhr = new XMLHttpRequest();
@@ -63,7 +60,7 @@
       xhr.withCredentials = true;
       xhr.send(JSON.stringify(requestBody));
     },
-    
+
     // Hide all command panels.
     hideCommandPanels = function(){
       var panels = document.querySelectorAll(".command-panel"),
@@ -73,17 +70,17 @@
         i += 1;
       }
     },
-    
+
     // Clear active downloads.
     clearActiveDownloads = function(){
       clearChildren(document.getElementById("active-downloads"));
     },
-    
+
     // Clear inactive downloads.
     clearInactiveDownloads = function(){
       clearChildren(document.getElementById("inactive-downloads"));
     },
-    
+
     // Show download details of a download specified with GID.
     showDownloadDetails = function(gid){
       var details = document.querySelectorAll("div.download-details"),
@@ -99,8 +96,8 @@
         index += 1;
       }
     },
-    
-    // Check the checkboxes in download details which the corresponding files 
+
+    // Check the checkboxes in download details which the corresponding files
     // has been selected.
     checkSelectedFiles = function(docFragment, gid, files){
       var downloadFiles = docFragment.querySelectorAll(
@@ -113,7 +110,7 @@
         }
       });
     },
-    
+
     // Select all files in a download task specified by GID.
     selectAllFiles = function(gid){
       var files = document.querySelectorAll(
@@ -124,7 +121,7 @@
         index += 1;
       }
     },
-    
+
     // Unselected all files in a download task specified by GID.
     unselectAllFiles = function(gid){
       var files = document.querySelectorAll(
@@ -135,11 +132,11 @@
         index += 1;
       }
     },
-    
+
     /*
       Core.
     */
-    
+
     // Add download task by URL.
     addDownloadByUrl = function(url){
       var requestBody = {
@@ -156,7 +153,7 @@
         };
       xhrHelper(requestBody, successCallback, errorCallback);
     },
-    
+
     // Add download task by BitTorrent file.
     addDownloadByTorrent = function(fileInBase64){
       var requestBody = {
@@ -173,7 +170,7 @@
         };
       xhrHelper(requestBody, successCallback, errorCallback);
     },
-    
+
     // Get statistics.
     getStatistics = function(){
       // Get version.
@@ -208,9 +205,9 @@
               downloadSpeedInKbps = null;
             clearChildren(uploadSpeed);
             clearChildren(downloadSpeed);
-            uploadSpeedInKbps = 
+            uploadSpeedInKbps =
               (Number(response.result.uploadSpeed) / 1000 * 8).toFixed(2);
-            downloadSpeedInKbps = 
+            downloadSpeedInKbps =
               (Number(response.result.downloadSpeed) / 1000 * 8).toFixed(2);
             uploadSpeed.appendChild(
               document.createTextNode(uploadSpeedInKbps + " kb/s"));
@@ -223,7 +220,7 @@
         xhrHelper(requestBody, successCallback, errorCallback);
       }());
     },
-    
+
     // Force pause download task specified by GID.
     forcePauseDownload = function(gid){
       var requestBody = {
@@ -240,7 +237,7 @@
         };
       xhrHelper(requestBody, successCallback, errorCallback);
     },
-    
+
     // Resume paused download task specified by GID.
     resumeDownload = function(gid){
       var requestBody = {
@@ -257,7 +254,7 @@
         };
       xhrHelper(requestBody, successCallback, errorCallback);
     },
-    
+
     // Stop download task specified by GID.
     stopDownload = function(gid){
       var requestBody = {
@@ -274,7 +271,7 @@
         };
       xhrHelper(requestBody, successCallback, errorCallback);
     },
-    
+
     // Remove download task specified by GID.
     removeDownload = function(gid){
       var requestBody = {
@@ -325,7 +322,7 @@
       };
       xhrHelper(requestBody, successCallBack, errorCallback);
     },
-    
+
     // Get active download tasks.
     getActiveDownloads = function(){
       var requestBody = {
@@ -352,11 +349,11 @@
             // Define download task details for rendering.
             downloadDetails = {
               gid: download.gid,
-              uploadSpeed: ((download.uploadSpeed / 1000 * 8).toFixed(2)) + 
+              uploadSpeed: ((download.uploadSpeed / 1000 * 8).toFixed(2)) +
                 " kb/s",
               downloadSpeed: ((download.downloadSpeed / 1000 * 8).toFixed(2)) +
                 " kb/s",
-              completePercentage: 
+              completePercentage:
                 ((
                   (download.completedLength / download.totalLength) * 100
                 ).toFixed(2)) + " %",
@@ -365,16 +362,16 @@
               canBePaused: true,
               canBeUpdated: false
             };
-            // Render download task, embed the rendered string (in HTML) in a 
+            // Render download task, embed the rendered string (in HTML) in a
             // container.
-            downloadTask = 
+            downloadTask =
               Mustache.render(downloadTaskTemplate, downloadDetails);
             container.innerHTML = downloadTask;
             container.id = "download-" + download.gid;
-            // Append container to document fragment before updating download 
+            // Append container to document fragment before updating download
             // details and binding functions.
             docFragment.appendChild(container);
-            // Update download details, check the checkbox if it has been 
+            // Update download details, check the checkbox if it has been
             // selected.
             checkSelectedFiles(docFragment, download.gid, download.files);
             // Bind function to show download details.
@@ -401,7 +398,7 @@
         };
       xhrHelper(requestBody, successCallback, errorCallback);
     },
-    
+
     // Get waiting download tasks.
     getWaitingDownloads = function(){
       var requestBody = {
@@ -432,11 +429,11 @@
             // Define download task details for rendering.
             downloadDetails = {
               gid: download.gid,
-              uploadSpeed: ((download.uploadSpeed / 1000 * 8).toFixed(2)) + 
+              uploadSpeed: ((download.uploadSpeed / 1000 * 8).toFixed(2)) +
                 " kb/s",
               downloadSpeed: ((download.downloadSpeed / 1000 * 8).toFixed(2)) +
                 " kb/s",
-              completePercentage: 
+              completePercentage:
                 ((
                   (download.completedLength / download.totalLength) * 100
                 ).toFixed(2)) + " %",
@@ -445,16 +442,16 @@
               canBePaused: true,
               canBeUpdated: true
             };
-            // Render download task, embed the rendered string (in HTML) in a 
+            // Render download task, embed the rendered string (in HTML) in a
             // container.
-            downloadTask = 
+            downloadTask =
               Mustache.render(downloadTaskTemplate, downloadDetails);
             container.innerHTML = downloadTask;
             container.id = "download-" + download.gid;
-            // Append container to document fragment before updating download 
+            // Append container to document fragment before updating download
             // details and binding functions.
             docFragment.appendChild(container);
-            // Update download details, check the checkbox if it has been 
+            // Update download details, check the checkbox if it has been
             // selected.
             checkSelectedFiles(docFragment, download.gid, download.files);
             // Bind function to show download details.
@@ -464,7 +461,7 @@
             // Bind functions to start/ pause button and stop button.
             startOrPauseButton = docFragment.querySelector(
               "#download-startOrPause-" + download.gid);
-            // If download task is being paused, the button will resume 
+            // If download task is being paused, the button will resume
             // download process, otherwise show error message.
             startOrPauseButton.onclick = function(){
               if(download.status === "paused"){
@@ -473,12 +470,12 @@
                 showErrorMessage("Cannot start non-paused download task.");
               }
             };
-            stopButton = 
+            stopButton =
               docFragment.querySelector("#download-stop-" + download.gid);
             stopButton.onclick = function(){
               stopDownload(download.gid);
             };
-            // Bind functions to buttons for select or unselect all files, and 
+            // Bind functions to buttons for select or unselect all files, and
             // button for updating download task.
             selectAllButton = docFragment.querySelector(
               "#download-" + download.gid + "-select-all-button");
@@ -504,7 +501,7 @@
         };
       xhrHelper(requestBody, successCallback, errorCallback);
     },
-    
+
     // Get stopped download tasks.
     getStoppedDownloads = function(){
       var requestBody = {
@@ -531,11 +528,11 @@
             // Define download task details for rendering.
             downloadDetails = {
               gid: download.gid,
-              uploadSpeed: ((download.uploadSpeed / 1000 * 8).toFixed(2)) + 
+              uploadSpeed: ((download.uploadSpeed / 1000 * 8).toFixed(2)) +
                 " kb/s",
               downloadSpeed: ((download.downloadSpeed / 1000 * 8).toFixed(2)) +
                 " kb/s",
-              completePercentage: 
+              completePercentage:
                 ((
                   (download.completedLength / download.totalLength) * 100
                 ).toFixed(2)) + " %",
@@ -544,16 +541,16 @@
               canBePaused: false,
               canBeUpdated: false
             };
-            // Render download task, embed the rendered string (in HTML) in a 
+            // Render download task, embed the rendered string (in HTML) in a
             // container.
-            downloadTask = 
+            downloadTask =
               Mustache.render(downloadTaskTemplate, downloadDetails);
             container.innerHTML = downloadTask;
             container.id = "download-" + download.gid;
-            // Append container to document fragment before updating download 
+            // Append container to document fragment before updating download
             // details and binding functions.
             docFragment.appendChild(container);
-            // Update download details, check the checkbox if it has been 
+            // Update download details, check the checkbox if it has been
             // selected.
             checkSelectedFiles(docFragment, download.gid, download.files);
             // Bind function to show download details.
@@ -561,7 +558,7 @@
               showDownloadDetails(download.gid);
             };
             // Bind functions to stop button.
-            stopButton = 
+            stopButton =
               docFragment.querySelector("#download-stop-" + download.gid);
             stopButton.onclick = function(){
               removeDownload(download.gid);
@@ -575,7 +572,7 @@
         };
       xhrHelper(requestBody, successCallback, errorCallback);
     };
-    
+
   // Get download tasks.
   getDownloads = function(){
     clearActiveDownloads();
@@ -584,18 +581,18 @@
     getWaitingDownloads();
     getStoppedDownloads();
   };
-  
+
   /*
     Binding user interface events to functions.
   */
-  
+
   // Show command panel for user to add download task by URL.
   document.getElementById("add-by-url-button").onclick = function(){
     hideErrorMessage();
     hideCommandPanels();
     document.getElementById("add-by-url-panel").style.display = "block";
   };
-  
+
   // Handles submission of adding download task by URL.
   document.getElementById("add-by-url-panel").onsubmit = function(){
     var url = document.getElementById("new-download-url").value;
@@ -616,14 +613,14 @@
     document.getElementById("new-download-url").value = "";
     return false;
   };
-  
+
   // Show command panel for user to add download task by BitTorrent file.
   document.getElementById("add-by-torrent-button").onclick = function(){
     hideErrorMessage();
     hideCommandPanels();
     document.getElementById("add-by-torrent-panel").style.display = "block";
   };
-  
+
   // Handles submission of adding download task by BitTorrent file.
   document.getElementById("add-by-torrent-panel").onsubmit = function(){
     var torrentFiles = document.getElementById("new-download-torrent").files,
@@ -645,21 +642,21 @@
     fileReader = new window.FileReader();
     fileReader.onload = function(event){
       var fileInBase64 = event.target.result;
-      fileInBase64 = 
+      fileInBase64 =
         fileInBase64.substring(fileInBase64.indexOf("base64,") + 7);
       addDownloadByTorrent(fileInBase64);
     };
     fileReader.readAsDataURL(torrentFile);
     return false;
   };
-  
+
   // Show command panel for user to configure the settings.
   document.getElementById("settings-link").onclick = function(){
     hideErrorMessage();
     hideCommandPanels();
     document.getElementById("settings-panel").style.display = "block";
   };
-  
+
   // Handles saving of new configurations.
   document.getElementById("settings-panel").onsubmit = function(){
     var protocol = window.location.protocol,
@@ -674,7 +671,7 @@
     }
     rpcEndpoint = protocol + "//" + host + ":" + port + "/jsonrpc";
     if(user.length > 0 && password.length > 0){
-      credentials = Base64.encode(user + ":" + password);
+      credentials = btoa(user + ":" + password);
     }
     hideCommandPanels();
     // Show statistics after configuring settings.
@@ -683,7 +680,7 @@
     getDownloads();
     return false;
   };
-  
+
   // Refresh statistics and list of download tasks.
   document.getElementById("refresh-button").onclick = function(){
     hideErrorMessage();
@@ -697,7 +694,7 @@
     getStatistics();
     getDownloads();
   };
-  
+
   // Pre-compile download task template.
   Mustache.parse(downloadTaskTemplate);
 }());
