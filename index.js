@@ -202,7 +202,10 @@
      */
     addDownloadByUrl = function(url){
       var parameters = [
-          url
+          // As stated in the API document, the second parameter must be an
+          // array, not a string, even if we have only one URL pointing to the
+          // same resource.
+          [url]
         ],
         successCallback = function(){
           getDownloads();
