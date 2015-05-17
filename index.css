@@ -4,6 +4,15 @@ body{
   font-family: Arial, Helvetica, sans-serif;
 }
 
+div.header-text{
+  font-size: larger;
+  font-weight: bold;
+}
+
+div.downloads-box-header-text{
+  margin-top: 1em;
+}
+
 #aria2-version, span.speed, span.gid, span.complete-percentage,
 span.download-status{
   margin-right: 3em;
