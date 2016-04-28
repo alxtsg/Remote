@@ -1,4 +1,4 @@
-(function(){
+(function () {
 
   'use strict';
 
@@ -26,8 +26,8 @@
      *
      * @param {Node} node The node whose children node wll be removed.
      */
-    clearChildren = function(node){
-      while(node.hasChildNodes()){
+    clearChildren = function (node) {
+      while (node.hasChildNodes()) {
         node.removeChild(node.firstChild);
       }
     },
@@ -35,9 +35,9 @@
     /**
      * Shows error message.
      *
-     * @param {String} errorMessage Error message.
+     * @param {string} errorMessage Error message.
      */
-    showErrorMessage = function(errorMessage){
+    showErrorMessage = function (errorMessage) {
       var errorMessageBox = document.getElementById('error-message');
       clearChildren(errorMessageBox);
       errorMessageBox.appendChild(document.createTextNode(errorMessage));
@@ -47,7 +47,7 @@
     /**
      * Hides error message.
      */
-    hideErrorMessage = function(){
+    hideErrorMessage = function () {
       document.getElementById('error-message').style.display = 'none';
     },
 
@@ -68,7 +68,7 @@
      *                                 to be a JSON object which is the
      *                                 response.
      */
-    xhrHelper = function(method, parameters, successCallback, errorCallback){
+    xhrHelper = function (method, parameters, successCallback, errorCallback) {
       var xhr = new XMLHttpRequest(),
         requestBody = {
           jsonrpc: '2.0',
@@ -78,15 +78,15 @@
         };
       // If RPC authentication token is specified, add it to the head of array
       // of parameters.
-      if(rpcAuthenticationToken !== null){
+      if (rpcAuthenticationToken !== null) {
         requestBody.params =
           [rpcAuthenticationToken].concat(requestBody.params);
       }
-      xhr.onreadystatechange = function(){
-        if(xhr.readyState === 4){
-          if(xhr.status === 200){
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
             successCallback(JSON.parse(xhr.responseText));
-          }else{
+          } else {
             errorCallback(JSON.parse(xhr.responseText));
           }
         }
@@ -98,10 +98,10 @@
     /**
      * Hides all command panels.
      */
-    hideCommandPanels = function(){
+    hideCommandPanels = function () {
       var panels = document.querySelectorAll('.command-panel'),
         i = 0;
-      while(i < panels.length){
+      while (i < panels.length) {
         panels[i].style.display = 'none';
         i += 1;
       }
@@ -110,14 +110,14 @@
     /**
      * Clears the list of active downloads from screen.
      */
-    clearActiveDownloads = function(){
+    clearActiveDownloads = function () {
       clearChildren(document.getElementById('active-downloads'));
     },
 
     /**
      * Clears the list of inactive downloads from screen.
      */
-    clearInactiveDownloads = function(){
+    clearInactiveDownloads = function () {
       clearChildren(document.getElementById('inactive-downloads'));
     },
 
@@ -126,15 +126,15 @@
      *
      * @param {String} gid GID of the download task.
      */
-    showDownloadDetails = function(gid){
+    showDownloadDetails = function (gid) {
       var details = document.querySelectorAll('div.download-details'),
         index = 0,
         detailsId = null;
-      while(index < details.length){
+      while (index < details.length) {
         detailsId = 'download-details-' + gid;
-        if(details[index].id === detailsId){
+        if (details[index].id === detailsId) {
           details[index].style.display = 'block';
-        }else{
+        } else {
           details[index].style.display = 'none';
         }
         index += 1;
@@ -149,13 +149,13 @@
      * @param {String} gid GID of the download task.
      * @param {Array} files Objects representing files in the download task.
      */
-    checkSelectedFiles = function(docFragment, gid, files){
+    checkSelectedFiles = function (docFragment, gid, files) {
       var downloadFiles = docFragment.querySelectorAll(
         '#download-files-' + gid + ' input[type="checkbox"]');
-      files.forEach(function(file, index){
-        if(file.selected === 'true'){
+      files.forEach(function (file, index) {
+        if (file.selected === 'true') {
           downloadFiles[index].checked = true;
-        }else{
+        } else {
           downloadFiles[index].checked = false;
         }
       });
@@ -166,11 +166,11 @@
      *
      * @param {String} gid GID of the download task.
      */
-    selectAllFiles = function(gid){
+    selectAllFiles = function (gid) {
       var files = document.querySelectorAll(
         '#download-files-' + gid + ' input[type="checkbox"]'),
         index = 0;
-      while(index < files.length){
+      while (index < files.length) {
         files[index].checked = true;
         index += 1;
       }
@@ -181,11 +181,11 @@
      *
      * @param {String} gid GID of the download task.
      */
-    unselectAllFiles = function(gid){
+    unselectAllFiles = function (gid) {
       var files = document.querySelectorAll(
         '#download-files-' + gid + ' input[type="checkbox"]'),
         index = 0;
-      while(index < files.length){
+      while (index < files.length) {
         files[index].checked = false;
         index += 1;
       }
@@ -200,17 +200,17 @@
      *
      * @param {String} url File URL.
      */
-    addDownloadByUrl = function(url){
+    addDownloadByUrl = function (url) {
       var parameters = [
           // As stated in the API document, the second parameter must be an
           // array, not a string, even if we have only one URL pointing to the
           // same resource.
           [url]
         ],
-        successCallback = function(){
+        successCallback = function () {
           getDownloads();
         },
-        errorCallback = function(){
+        errorCallback = function () {
           showErrorMessage('Unable to add download task by URL.');
         };
       xhrHelper('aria2.addUri', parameters, successCallback, errorCallback);
@@ -222,14 +222,14 @@
      * @param {String} fileInBase64 The BitTorrent file encoded in Base64
      *                              representation.
      */
-    addDownloadByTorrent = function(fileInBase64){
+    addDownloadByTorrent = function (fileInBase64) {
       var parameters = [
           fileInBase64
         ],
-        successCallback = function(){
+        successCallback = function () {
           getDownloads();
         },
-        errorCallback = function(){
+        errorCallback = function () {
           showErrorMessage('Unable to add download task by BitTorrent file.');
         };
       xhrHelper('aria2.addTorrent', parameters, successCallback, errorCallback);
@@ -238,26 +238,26 @@
     /**
      * Gets statistics.
      */
-    getStatistics = function(){
+    getStatistics = function () {
       // Get version.
-      (function(){
+      (function () {
         var parameters = [],
-          successCallback = function(response){
+          successCallback = function (response) {
             var version = document.getElementById('aria2-version');
             clearChildren(version);
             version.appendChild(
               document.createTextNode(response.result.version));
           },
-          errorCallback = function(){
+          errorCallback = function () {
             showErrorMessage('Unable to get aria2 version.');
           };
         xhrHelper(
           'aria2.getVersion', parameters, successCallback, errorCallback);
       }());
       // Get global traffic.
-      (function(){
+      (function () {
         var parameters = [],
-          successCallback = function(response){
+          successCallback = function (response) {
             var uploadSpeed = document.getElementById('global-upload-speed'),
               downloadSpeed = document.getElementById('global-download-speed'),
               uploadSpeedInKbps = null,
@@ -273,7 +273,7 @@
             downloadSpeed.appendChild(
               document.createTextNode(downloadSpeedInKbps + ' kb/s'));
           },
-          errorCallback = function(){
+          errorCallback = function () {
             showErrorMessage('Unable to get global traffic statistics.');
           };
         xhrHelper(
@@ -286,14 +286,14 @@
      *
      * @param {String} gid GID of the download task.
      */
-    forcePauseDownload = function(gid){
+    forcePauseDownload = function (gid) {
       var parameters = [
           gid
         ],
-        successCallback = function(){
+        successCallback = function () {
           getDownloads();
         },
-        errorCallback = function(){
+        errorCallback = function () {
           showErrorMessage('Unable to pause download.');
         };
       xhrHelper('aria2.forcePause', parameters, successCallback, errorCallback);
@@ -304,14 +304,14 @@
      *
      * @param {String} gid GID of the download task.
      */
-    resumeDownload = function(gid){
+    resumeDownload = function (gid) {
       var parameters = [
           gid
         ],
-        successCallback = function(){
+        successCallback = function () {
           getDownloads();
         },
-        errorCallback = function(){
+        errorCallback = function () {
           showErrorMessage('Unable to resume download.');
         };
       xhrHelper('aria2.unpause', parameters, successCallback, errorCallback);
@@ -322,14 +322,14 @@
      *
      * @param {String} gid GID of the download task.
      */
-    stopDownload = function(gid){
+    stopDownload = function (gid) {
       var parameters = [
           gid
         ],
-        successCallback = function(){
+        successCallback = function () {
           getDownloads();
         },
-        errorCallback = function(){
+        errorCallback = function () {
           showErrorMessage('Unable to stop download.');
         };
       xhrHelper(
@@ -341,14 +341,14 @@
      *
      * @param {String} gid GID of the download task.
      */
-    removeDownload = function(gid){
+    removeDownload = function (gid) {
       var parameters = [
           gid
         ],
-        successCallback = function(){
+        successCallback = function () {
           getDownloads();
         },
-        errorCallback = function(){
+        errorCallback = function () {
           showErrorMessage('Unable to remove download.');
         };
       xhrHelper('aria2.removeDownloadResult', parameters, successCallback,
@@ -360,23 +360,23 @@
      *
      * @param {String} gid GID of the download task.
      */
-    updateDownload = function(gid){
+    updateDownload = function (gid) {
       var files = null,
         selectedFileIndices = [],
         selectedFileIndicesString = null,
         parameters = null,
-        successCallBack = function(){
+        successCallBack = function () {
           getDownloads();
         },
-        errorCallback = function(){
+        errorCallback = function () {
           showErrorMessage('Unable to update download.');
         };
       // Get indices of selected files.
       files = Array.prototype.slice.call(
         document.getElementById('download-files-' + gid).querySelectorAll(
           'input[type="checkbox"]'));
-      files.forEach(function(file, index){
-        if(file.checked){
+      files.forEach(function (file, index) {
+        if (file.checked) {
           // Note that the file index used in aria2 begins from 1, not 0.
           selectedFileIndices.push(index + 1);
         }
@@ -392,11 +392,11 @@
     /**
      * Gets active download tasks.
      */
-    getActiveDownloads = function(){
+    getActiveDownloads = function () {
       var parameters = [],
-        successCallback = function(response){
+        successCallback = function (response) {
           var activeDownloads = document.getElementById('active-downloads');
-          response.result.forEach(function(download){
+          response.result.forEach(function (download) {
             var fileInfos = [],
               downloadDetails = null,
               downloadTask = null,
@@ -405,7 +405,7 @@
               startOrPauseButton = null,
               stopButton = null;
             // Extract paths of files.
-            download.files.forEach(function(file){
+            download.files.forEach(function (file) {
               fileInfos.push({
                 fileName: file.path
               });
@@ -439,25 +439,26 @@
             // selected.
             checkSelectedFiles(docFragment, download.gid, download.files);
             // Bind function to show download details.
-            docFragment.querySelector('#' + container.id).onclick = function(){
-              showDownloadDetails(download.gid);
-            };
+            docFragment.querySelector('#' + container.id).onclick =
+              function () {
+                showDownloadDetails(download.gid);
+              };
             // Bind functions to start/ pause button and stop button.
             startOrPauseButton = docFragment.querySelector(
               '#download-startOrPause-' + download.gid);
-            startOrPauseButton.onclick = function(){
+            startOrPauseButton.onclick = function () {
               forcePauseDownload(download.gid);
             };
             stopButton = docFragment.querySelector(
               '#download-stop-' + download.gid);
-            stopButton.onclick = function(){
+            stopButton.onclick = function () {
               stopDownload(download.gid);
             };
             // Append document fragment to active downloads list.
             activeDownloads.appendChild(docFragment);
           });
         },
-        errorCallback = function(){
+        errorCallback = function () {
           showErrorMessage('Unable to get active downloads.');
         };
       xhrHelper('aria2.tellActive', parameters, successCallback, errorCallback);
@@ -467,16 +468,16 @@
      * Gets waiting download tasks. This function assumes no more than 1000
      * download tasks are waiting.
      */
-    getWaitingDownloads = function(){
+    getWaitingDownloads = function () {
       var parameters = [
           // Start from beginning, offset is zero.
           0,
           // Get at most 1000 waiting download tasks.
           1000
         ],
-        successCallback = function(response){
+        successCallback = function (response) {
           var inactiveDownloads = document.getElementById('inactive-downloads');
-          response.result.forEach(function(download){
+          response.result.forEach(function (download) {
             var fileInfos = [],
               downloadDetails = null,
               downloadTask = null,
@@ -488,7 +489,7 @@
               unselectAllButton = null,
               saveButton = null;
             // Extract paths of files.
-            download.files.forEach(function(file){
+            download.files.forEach(function (file) {
               fileInfos.push({
                 fileName: file.path
               });
@@ -530,40 +531,40 @@
               '#download-startOrPause-' + download.gid);
             // If download task is being paused, the button will resume
             // download process, otherwise show error message.
-            startOrPauseButton.onclick = function(){
-              if(download.status === 'paused'){
+            startOrPauseButton.onclick = function () {
+              if (download.status === 'paused') {
                 resumeDownload(download.gid);
-              }else{
+              } else {
                 showErrorMessage('Cannot start non-paused download task.');
               }
             };
             stopButton =
               docFragment.querySelector('#download-stop-' + download.gid);
-            stopButton.onclick = function(){
+            stopButton.onclick = function () {
               stopDownload(download.gid);
             };
             // Bind functions to buttons for select or unselect all files, and
             // button for updating download task.
             selectAllButton = docFragment.querySelector(
               '#download-' + download.gid + '-select-all-button');
-            selectAllButton.onclick = function(){
+            selectAllButton.onclick = function () {
               selectAllFiles(download.gid);
             };
             unselectAllButton = docFragment.querySelector(
               '#download-' + download.gid + '-unselect-all-button');
-            unselectAllButton.onclick = function(){
+            unselectAllButton.onclick = function () {
               unselectAllFiles(download.gid);
             };
             saveButton = docFragment.querySelector(
               '#download-' + download.gid + '-save-button');
-            saveButton.onclick = function(){
+            saveButton.onclick = function () {
               updateDownload(download.gid);
             };
             // Append document fragment to inactive downloads list.
             inactiveDownloads.appendChild(docFragment);
           });
         },
-        errorCallback = function(){
+        errorCallback = function () {
           showErrorMessage('Unable to get waiting downloads.');
         };
       xhrHelper(
@@ -574,16 +575,16 @@
      * Gets stopped download tasks. This function assumes no more than 1000
      * download tasks have been stopped.
      */
-    getStoppedDownloads = function(){
+    getStoppedDownloads = function () {
       var parameters = [
           // Starts from beginning, offset is zero.
           0,
           // Get at most 1000 stopped download tasks.
           1000
         ],
-        successCallback = function(response){
+        successCallback = function (response) {
           var inactiveDownloads = document.getElementById('inactive-downloads');
-          response.result.forEach(function(download){
+          response.result.forEach(function (download) {
             var fileInfos = [],
               downloadDetails = null,
               downloadTask = null,
@@ -591,7 +592,7 @@
               container = document.createElement('div'),
               stopButton = null;
             // Extract paths of files.
-            download.files.forEach(function(file){
+            download.files.forEach(function (file) {
               fileInfos.push({
                 fileName: file.path
               });
@@ -625,20 +626,21 @@
             // selected.
             checkSelectedFiles(docFragment, download.gid, download.files);
             // Bind function to show download details.
-            docFragment.querySelector('#' + container.id).onclick = function(){
-              showDownloadDetails(download.gid);
-            };
+            docFragment.querySelector('#' + container.id).onclick =
+              function () {
+                showDownloadDetails(download.gid);
+              };
             // Bind functions to stop button.
             stopButton =
               docFragment.querySelector('#download-stop-' + download.gid);
-            stopButton.onclick = function(){
+            stopButton.onclick = function () {
               removeDownload(download.gid);
             };
             // Append document fragment to inactive downloads list.
             inactiveDownloads.appendChild(container);
           });
         },
-        errorCallback = function(){
+        errorCallback = function () {
           showErrorMessage('Unable to get stopped downloads.');
         };
       xhrHelper(
@@ -648,7 +650,7 @@
   /**
    * Gets download tasks.
    */
-  getDownloads = function(){
+  getDownloads = function () {
     clearActiveDownloads();
     getActiveDownloads();
     clearInactiveDownloads();
@@ -656,14 +658,14 @@
     getStoppedDownloads();
   };
 
- /**
-  * Bind functions to UI components events.
-  */
+  /**
+   * Bind functions to UI components events.
+   */
 
   /**
    * Shows command panel for user to add a download task by URL.
    */
-  document.getElementById('add-by-url-button').onclick = function(){
+  document.getElementById('add-by-url-button').onclick = function () {
     hideErrorMessage();
     hideCommandPanels();
     document.getElementById('add-by-url-panel').style.display = 'block';
@@ -672,17 +674,17 @@
   /**
    * Handles submission of adding download task by URL.
    */
-  document.getElementById('add-by-url-panel').onsubmit = function(){
+  document.getElementById('add-by-url-panel').onsubmit = function () {
     var url = document.getElementById('new-download-url').value;
     hideErrorMessage();
     // If RPC interface endpoint has not been configured, show error message and
     // cancel the submission.
-    if(rpcEndpoint === null){
+    if (rpcEndpoint === null) {
       showErrorMessage('Host and port of aria2 are not configured.');
       return false;
     }
     // If URL is empty, show error message and cancel the submission.
-    if(url === ''){
+    if (url === '') {
       showErrorMessage('Missing URL.');
       return false;
     }
@@ -695,7 +697,7 @@
   /**
    * Shows command panel for user to add a download task by BitTorrent file.
    */
-  document.getElementById('add-by-torrent-button').onclick = function(){
+  document.getElementById('add-by-torrent-button').onclick = function () {
     hideErrorMessage();
     hideCommandPanels();
     document.getElementById('add-by-torrent-panel').style.display = 'block';
@@ -704,26 +706,26 @@
   /**
    * Handles submission of adding download task by BitTorrent file.
    */
-  document.getElementById('add-by-torrent-panel').onsubmit = function(){
+  document.getElementById('add-by-torrent-panel').onsubmit = function () {
     var torrentFiles = document.getElementById('new-download-torrent').files,
       torrentFile = null,
       fileReader = null;
     hideErrorMessage();
     // If RPC interface endpoint has not been configured, show error message and
     // cancel the submission.
-    if(rpcEndpoint === null){
+    if (rpcEndpoint === null) {
       showErrorMessage('Host and port of aria2 are not configured.');
       return false;
     }
     // If no files has been selected, show error message and cancel the
     // submission.
-    if(torrentFiles.length === 0){
+    if (torrentFiles.length === 0) {
       showErrorMessage('Missing BitTorrent file.');
       return false;
     }
     torrentFile = torrentFiles[0];
     fileReader = new window.FileReader();
-    fileReader.onload = function(event){
+    fileReader.onload = function (event) {
       var fileInBase64 = event.target.result;
       fileInBase64 =
         fileInBase64.substring(fileInBase64.indexOf('base64,') + 7);
@@ -736,7 +738,7 @@
   /**
    * Shows command panel for user to configure the settings.
    */
-  document.getElementById('settings-button').onclick = function(){
+  document.getElementById('settings-button').onclick = function () {
     hideErrorMessage();
     hideCommandPanels();
     document.getElementById('settings-panel').style.display = 'block';
@@ -745,18 +747,18 @@
   /**
    * Handles submission of new configurations.
    */
-  document.getElementById('settings-panel').onsubmit = function(){
+  document.getElementById('settings-panel').onsubmit = function () {
     var protocol = window.location.protocol,
       host = document.getElementById('aria2-host').value,
       port = document.getElementById('aria2-port').value,
       token = document.getElementById('aria2-token').value;
     hideErrorMessage();
-    if(host === '' || port === ''){
+    if ((host === '') || (port === '')) {
       showErrorMessage('Missing host or port of aria2.');
       return false;
     }
     rpcEndpoint = protocol + '//' + host + ':' + port + '/jsonrpc';
-    if(token.length > 0){
+    if (token.length > 0) {
       rpcAuthenticationToken = 'token:' + token;
     }
     hideCommandPanels();
@@ -770,11 +772,11 @@
   /**
    * Refreshes statistics and the list of download tasks.
    */
-  document.getElementById('refresh-button').onclick = function(){
+  document.getElementById('refresh-button').onclick = function () {
     hideErrorMessage();
     // If RPC interface endpoint has not been configured, show error message and
     // stop.
-    if(rpcEndpoint === null){
+    if (rpcEndpoint === null) {
       showErrorMessage('Host and port of aria2 are not configured.');
       return;
     }
