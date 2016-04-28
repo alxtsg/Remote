@@ -55,6 +55,7 @@ The version number of aria2, global upload speed, global download speed and down
 ## TODO ##
 
 * Separate controller from view.
+* Move to ES6.
 * Better UI.
 
 ## License ##
