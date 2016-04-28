@@ -17,9 +17,9 @@
     // Placeholder of function which gets download tasks.
     getDownloads = null,
 
-   /**
-    * Utility functions.
-    */
+    /**
+     * Utility functions.
+     */
 
     /**
      * Clears children nodes of a given node.
@@ -191,9 +191,9 @@
       }
     },
 
-   /**
-    * Core functions.
-    */
+    /**
+     * Core functions.
+     */
 
     /**
      * Adds a download task by URL.
