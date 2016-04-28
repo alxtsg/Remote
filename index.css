@@ -4,6 +4,10 @@ body{
   font-family: Arial, Helvetica, sans-serif;
 }
 
+#statistics{
+  margin-bottom: 0.3em;
+}
+
 div.header-text{
   font-size: larger;
   font-weight: bold;

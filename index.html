@@ -7,18 +7,20 @@
 </head>
 <body>
   <div id="top-panel">
-    <div class="header-text">Remote</div>
-    <p>
+    <h1>Remote</h1>
+    <div id="statistics">
       Version: <span id="aria2-version">N/A</span>
       Upload: <span id="global-upload-speed" class="speed">N/A</span>
       Download: <span id="global-download-speed" class="speed">N/A</span>
-    </p>
+    </div>
   </div>
   <div id="command-panel">
-    <button id="add-by-url-button">Add by URL</button>
-    <button id="add-by-torrent-button">Add by torrent file</button>
-    <button id="refresh-button">Refresh</button>
-    <button id="settings-button">Settings</button>
+    <div>
+      <button id="add-by-url-button">Add by URL</button>
+      <button id="add-by-torrent-button">Add by torrent file</button>
+      <button id="refresh-button">Refresh</button>
+      <button id="settings-button">Settings</button>
+    </div>
     <form id="add-by-url-panel" class="command-panel">
       <label>
         URL
@@ -91,7 +93,7 @@
       </div>
     </div>
   </div>
-  <script type="application/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js"></script>
+  <script type="application/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.min.js"></script>
   <script type="application/javascript" src="index.js"></script>
 </body>
 </html>
