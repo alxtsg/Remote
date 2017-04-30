@@ -2,17 +2,17 @@
 
 ## Description ##
 
-A simple web UI of [aria2](http://aria2.sourceforge.net/).
+A simple web client for [aria2](http://aria2.sourceforge.net/).
 
 ## Requirements ##
 
 * aria2 (`>=1.18.5`).
-* A web browser (Microsoft Edge, Internet Explorer 11, Firefox, etc.).
+* A web browser (e.g. Microsoft Edge, Mozilla Firefox, etc.).
 
 ## Installation ##
 
-0. Deploy the project to the web server.
-1. Open a web browser and visit where Remote is deployed.
+0. Deploy Remote to a web server.
+1. Open a web browser and navigate to where Remote is deployed.
 
 ## Usage ##
 
@@ -27,9 +27,9 @@ rpc-listen-port=8080
 rpc-secret=your-own-secret
 ```
 
-In Remote, enter the host, port (`rpc-listen-port` value) and RPC secret authorization token (`rpc-secret` value), then click Save button. Remote will now try to connect to aria2 and list all download tasks.
+In Remote, enter the host, port (`rpc-listen-port` value) and RPC secret authorization token (`rpc-secret` value), then click Save button. Remote will try to connect to aria2 and list all download tasks.
 
-To add download task by URL, click on Add by URL button. To add download task by torrent file, click on Add by torrent file button. To alter the connection settings, click on Settings button.
+To add a download task by URL, click on Add by URL button. To add a download task by torrent file, click on Add by torrent file button. To alter the connection settings, click on Settings button.
 
 Remote does not update the statistics automatically, click Refresh button to check the latest statistics shown on screen.
 
