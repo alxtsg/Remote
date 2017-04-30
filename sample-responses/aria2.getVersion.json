@@ -1,0 +1,18 @@
+{
+  "id": 1493573315215,
+  "jsonrpc": "2.0",
+  "result": {
+    "enabledFeatures": [
+      "Async DNS",
+      "BitTorrent",
+      "Firefox3 Cookie",
+      "GZip",
+      "HTTPS",
+      "Message Digest",
+      "Metalink",
+      "XML-RPC",
+      "SFTP"
+    ],
+    "version": "1.31.0"
+  }
+}

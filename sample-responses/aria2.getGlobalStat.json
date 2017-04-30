@@ -1,0 +1,12 @@
+{
+  "id": 1493578964596,
+  "jsonrpc": "2.0",
+  "result": {
+    "downloadSpeed": "1084096",
+    "numActive": "1",
+    "numStopped": "1",
+    "numStoppedTotal": "73",
+    "numWaiting": "0",
+    "uploadSpeed": "0"
+  }
+}

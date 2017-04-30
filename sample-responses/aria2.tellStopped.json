@@ -1,0 +1,44 @@
+{
+  "id": 1493578440549,
+  "jsonrpc": "2.0",
+  "result": [
+    {
+      "bitfield": "80",
+      "completedLength": "76681",
+      "connections": "0",
+      "dir": "\/home\/alex\/shared\/downloads",
+      "downloadSpeed": "0",
+      "errorCode": "0",
+      "errorMessage": "",
+      "files": [
+        {
+          "completedLength": "76681",
+          "index": "1",
+          "length": "76681",
+          "path": "\/home\/alex\/shared\/downloads\/debian-8.7.1-amd64-DVD-1.iso.torrent",
+          "selected": "true",
+          "uris": [
+            {
+              "status": "used",
+              "uri": "http:\/\/cdimage.debian.org\/debian-cd\/current\/amd64\/bt-dvd\/debian-8.7.1-amd64-DVD-1.iso.torrent"
+            },
+            {
+              "status": "waiting",
+              "uri": "http:\/\/cdimage.debian.org\/debian-cd\/current\/amd64\/bt-dvd\/debian-8.7.1-amd64-DVD-1.iso.torrent"
+            }
+          ]
+        }
+      ],
+      "followedBy": [
+        "a7079e898be2b099"
+      ],
+      "gid": "db89a6bd0ae5b941",
+      "numPieces": "1",
+      "pieceLength": "1048576",
+      "status": "complete",
+      "totalLength": "76681",
+      "uploadLength": "0",
+      "uploadSpeed": "0"
+    }
+  ]
+}
