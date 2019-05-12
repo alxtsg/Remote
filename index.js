@@ -5,12 +5,11 @@
 
   const RADIX_DECIMAL = 10;
 
-  const errorMessageElement = document.getElementById('error-message');
+  const errorMessage = document.getElementById('error-message');
   const addByUrlPanel = document.getElementById('add-by-url-panel');
   const addByTorrentPanel = document.getElementById('add-by-torrent-panel');
-  const activeDownloadsElement = document.getElementById('active-downloads');
-  const inactiveDownloadsElement =
-    document.getElementById('inactive-downloads');
+  const activeDownloads = document.getElementById('active-downloads');
+  const inactiveDownloads = document.getElementById('inactive-downloads');
   const downloadTaskTemplate =
     document.getElementById('download-task-template').innerHTML;
 
@@ -38,18 +37,18 @@
   /**
    * Shows error message.
    *
-   * @param {string} errorMessage Error message.
+   * @param {string} message Error message.
    */
-  const showErrorMessage = (errorMessage) => {
-    errorMessageElement.textContent = errorMessage;
-    errorMessageElement.style.display = 'block';
+  const showErrorMessage = (message) => {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
   };
 
   /**
    * Hides error message.
    */
   const hideErrorMessage = () => {
-    errorMessageElement.style.display = 'none';
+    errorMessage.style.display = 'none';
   };
 
   /**
@@ -467,7 +466,7 @@
           stopDownload(download.gid);
         };
         // Append document fragment to active downloads list.
-        activeDownloadsElement.appendChild(docFragment);
+        activeDownloads.appendChild(docFragment);
       });
     } catch (error) {
       showErrorMessage('Unable to get active downloads.');
@@ -571,7 +570,7 @@
           updateDownload(download.gid);
         };
         // Append document fragment to inactive downloads list.
-        inactiveDownloadsElement.appendChild(docFragment);
+        inactiveDownloads.appendChild(docFragment);
       });
     } catch (error) {
       showErrorMessage('Unable to get waiting downloads.');
@@ -647,7 +646,7 @@
           removeDownload(download.gid);
         };
         // Append document fragment to inactive downloads list.
-        inactiveDownloadsElement.appendChild(container);
+        inactiveDownloads.appendChild(container);
       });
     } catch (error) {
       showErrorMessage('Unable to get stopped downloads.');
@@ -658,8 +657,8 @@
    * Gets download tasks.
    */
   const getDownloads = () => {
-    clearChildren(activeDownloadsElement);
-    clearChildren(inactiveDownloadsElement);
+    clearChildren(activeDownloads);
+    clearChildren(inactiveDownloads);
     // Getting active, waiting, and stopped download tasks can be done in
     // parallel, so await is not needed.
     getActiveDownloads();
