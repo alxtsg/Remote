@@ -16,7 +16,7 @@
   let rpcEndpoint = null;
 
   // The aria2 RPC interface authentication token.
-  let rpcAuthenticationToken = null;
+  let rpcAuthToken = null;
 
   /**
    * Utility functions.
@@ -60,50 +60,6 @@
    */
   const speedInMbps = (speed) => {
     return Number((speed / 1000000) * 8).toFixed(2);
-  };
-
-  /**
-   * XMLHttpRequest helper function, helps sending request to aria2 RPC
-   * interface.
-   *
-   * @param {string} method RPC method.
-   * @param {Array} parameters RPC method parameters. Do not include RPC
-   *                           authentication token as it is being added
-   *                           automatically.
-   * @param {Function} successCallback Callback function to be invoked when
-   *                                   request has succeed. Expects first
-   *                                   parameter to be a JSON object which is
-   *                                   the response.
-   * @param {Function} errorCallback Callback function to be invoked when
-   *                                 request failed. Expects first parameter
-   *                                 to be a JSON object which is the
-   *                                 response.
-   */
-  const xhrHelper = (method, parameters, successCallback, errorCallback) => {
-    const xhr = new XMLHttpRequest();
-    const requestBody = {
-      jsonrpc: '2.0',
-      method: method,
-      params: parameters,
-      id: Date.now()
-    };
-    // If RPC authentication token is specified, add it to the head of array
-    // of parameters.
-    if (rpcAuthenticationToken !== null) {
-      requestBody.params =
-        [rpcAuthenticationToken].concat(requestBody.params);
-    }
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          successCallback(JSON.parse(xhr.responseText));
-        } else {
-          errorCallback(JSON.parse(xhr.responseText));
-        }
-      }
-    };
-    xhr.open('POST', rpcEndpoint);
-    xhr.send(JSON.stringify(requestBody));
   };
 
   /**
@@ -155,7 +111,7 @@
       return Promise.resolve(responseJson.result);
     } catch (error) {
       return Promise.reject(error);
-    };
+    }
   };
 
   /**
@@ -246,7 +202,7 @@
     try {
       await aria2Client({
         rpcEndpoint,
-        authToken: rpcAuthenticationToken,
+        authToken: rpcAuthToken,
         method: 'aria2.addUri',
         parameters: [
           // Each URL has to be put in an array.
@@ -262,6 +218,8 @@
   /**
    * Adds a download task by BitTorrent file.
    *
+   * @async
+   *
    * @param {string} fileInBase64 The BitTorrent file encoded in Base64
    *                              representation.
    */
@@ -269,7 +227,7 @@
     try {
       await aria2Client({
         rpcEndpoint,
-        authToken: rpcAuthenticationToken,
+        authToken: rpcAuthToken,
         method: 'aria2.addTorrent',
         parameters: [fileInBase64]
       });
@@ -281,13 +239,15 @@
 
   /**
    * Gets statistics, including aria2 version and global traffic.
+   *
+   * @async
    */
   const getStatistics = async () => {
     // Get version.
     try {
-      let result = await aria2Client({
+      const result = await aria2Client({
         rpcEndpoint,
-        authToken: rpcAuthenticationToken,
+        authToken: rpcAuthToken,
         method: 'aria2.getVersion',
         parameters: []
       });
@@ -297,9 +257,9 @@
     }
     // Get global traffic.
     try {
-      let result = await aria2Client({
+      const result = await aria2Client({
         rpcEndpoint,
-        authToken: rpcAuthenticationToken,
+        authToken: rpcAuthToken,
         method: 'aria2.getGlobalStat',
         parameters: []
       });
@@ -319,97 +279,99 @@
   /**
    * Forces a download task to be paused.
    *
+   * @async
+   *
    * @param {string} gid GID of the download task.
    */
-  const forcePauseDownload = (gid) => {
-    const parameters = [
-      gid
-    ];
-    xhrHelper(
-      'aria2.forcePause',
-      parameters,
-      () => {
-        getDownloads();
-      },
-      () => {
-        showErrorMessage('Unable to pause download.');
-      }
-    );
+  const forcePauseDownload = async (gid) => {
+    try {
+      await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthToken,
+        method: 'aria2.forcePause',
+        parameters: [gid]
+      });
+      getDownloads();
+    } catch (error) {
+      showErrorMessage('Unable to pause download.');
+    }
   };
 
   /**
    * Resumes a download task.
    *
+   * @async
+   *
    * @param {string} gid GID of the download task.
    */
-  const resumeDownload = (gid) => {
-    const parameters = [
-      gid
-    ];
-    xhrHelper(
-      'aria2.unpause',
-      parameters,
-      () => {
-        getDownloads();
-      },
-      () => {
-        showErrorMessage('Unable to resume download.');
-      }
-    );
+  const resumeDownload = async (gid) => {
+    try {
+      await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthToken,
+        method: 'aria2.unpause',
+        parameters: [gid]
+      });
+      getDownloads();
+    } catch (error) {
+      showErrorMessage('Unable to resume download.');
+    }
   };
 
   /**
    * Stops a download task.
    *
+   * @async
+   *
    * @param {string} gid GID of the download task.
    */
-  const stopDownload = (gid) => {
-    const parameters = [
-      gid
-    ];
-    xhrHelper(
-      'aria2.forceRemove',
-      parameters,
-      () => {
-        getDownloads();
-      },
-      () => {
-        showErrorMessage('Unable to stop download.');
-      }
-    );
+  const stopDownload = async (gid) => {
+    try {
+      await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthToken,
+        method: 'aria2.forceRemove',
+        parameters: [gid]
+      });
+      getDownloads();
+    } catch (error) {
+      showErrorMessage('Unable to stop download.');
+    }
   };
 
   /**
    * Removes a download task.
    *
+   * @async
+   *
    * @param {string} gid GID of the download task.
    */
-  const removeDownload = (gid) => {
-    const parameters = [
-      gid
-    ];
-    xhrHelper(
-      'aria2.removeDownloadResult',
-      parameters,
-      () => {
-        getDownloads();
-      },
-      () => {
-        showErrorMessage('Unable to remove download.');
-      }
-    );
+  const removeDownload = async (gid) => {
+    try {
+      await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthToken,
+        method: 'aria2.removeDownloadResult',
+        parameters: [gid]
+      });
+      getDownloads();
+    } catch (error) {
+      showErrorMessage('Unable to remove download.');
+    }
   };
 
   /**
    * Updates a download task.
    *
+   * @async
+   *
    * @param {string} gid GID of the download task.
    */
-  const updateDownload = (gid) => {
+  const updateDownload = async (gid) => {
     // Get indices of selected files.
-    const files = Array.prototype.slice.call(
-      document.getElementById(`download-files-${gid}`)
-        .querySelectorAll('input[type="checkbox"]'));
+    const container = document.getElementById(`download-files-${gid}`);
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    const files = Array.from(checkboxes);
     const selectedFileIndices = [];
     files.forEach((file, index) => {
       if (file.checked) {
@@ -417,271 +379,277 @@
         selectedFileIndices.push(index + 1);
       }
     });
-    const parameters = [
-      gid,
-      {
-        'select-file': selectedFileIndices.join(',')
-      }
-    ];
-    xhrHelper(
-      'aria2.changeOption',
-      parameters,
-      () => {
-        getDownloads();
-      },
-      () => {
-        showErrorMessage('Unable to update download.');
-      }
-    );
+    try {
+      await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthToken,
+        method: 'aria2.changeOption',
+        parameters: [
+          gid,
+          {
+            'select-file': selectedFileIndices.join(',')
+          }
+        ]
+      });
+      getDownloads();
+    } catch (error) {
+      showErrorMessage('Unable to update download.');
+    }
   };
 
   /**
    * Gets active download tasks.
+   *
+   * @async
    */
-  const getActiveDownloads = () => {
-    const parameters = [];
-    xhrHelper(
-      'aria2.tellActive',
-      parameters,
-      (response) => {
-        response.result.forEach((download) => {
-          // Extract paths of files.
-          const fileInfos = [];
-          download.files.forEach((file) => {
-            fileInfos.push({
-              fileName: file.path
-            });
+  const getActiveDownloads = async () => {
+    try {
+      const result = await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthToken,
+        method: 'aria2.tellActive',
+        parameters: []
+      });
+      result.forEach((download) => {
+        // Extract paths of files.
+        const fileInfos = [];
+        download.files.forEach((file) => {
+          fileInfos.push({
+            fileName: file.path
           });
-          // Define download task details for rendering.
-          const uploadSpeed =
-            speedInMbps(parseInt(download.uploadSpeed, RADIX_DECIMAL));
-          const downloadSpeed =
-            speedInMbps(parseInt(download.downloadSpeed, RADIX_DECIMAL));
-          const progressPercentage =
-            Number((download.completedLength / download.totalLength) * 100)
-              .toFixed(2);
-          const downloadDetails = {
-            gid: download.gid,
-            uploadSpeed: `${uploadSpeed} Mb/s`,
-            downloadSpeed: `${downloadSpeed} Mb/s`,
-            completePercentage: `${progressPercentage} %`,
-            status: download.status,
-            downloadFiles: fileInfos,
-            canBePaused: true,
-            canBeUpdated: false
-          };
-          // Render download task, embed the rendered HTML fragment in a <div>
-          // element.
-          const container = document.createElement('div');
-          container.innerHTML =
-            Mustache.render(downloadTaskTemplate, downloadDetails);
-          container.id = `download-${download.gid}`;
-          // Append container to document fragment before updating download
-          // details and binding functions.
-          const docFragment = document.createDocumentFragment();
-          docFragment.appendChild(container);
-          // Update download details, check the checkbox if it has been
-          // selected.
-          checkSelectedFiles(docFragment, download.gid, download.files);
-          // Bind function to show download details.
-          docFragment.querySelector(`#${container.id}`).onclick = () => {
-            showDownloadDetails(download.gid);
-          };
-          // Bind functions to start/ pause button and stop button.
-          const startOrPauseButton =
-            docFragment.querySelector(`#download-startOrPause-${download.gid}`);
-          startOrPauseButton.onclick = () => {
-            forcePauseDownload(download.gid);
-          };
-          const stopButton =
-            docFragment.querySelector(`#download-stop-${download.gid}`);
-          stopButton.onclick = () => {
-            stopDownload(download.gid);
-          };
-          // Append document fragment to active downloads list.
-          activeDownloadsElement.appendChild(docFragment);
         });
-      },
-      () => {
-        showErrorMessage('Unable to get active downloads.');
-      }
-    );
+        // Define download task details for rendering.
+        const uploadSpeed =
+          speedInMbps(parseInt(download.uploadSpeed, RADIX_DECIMAL));
+        const downloadSpeed =
+          speedInMbps(parseInt(download.downloadSpeed, RADIX_DECIMAL));
+        const progressPercentage =
+          Number((download.completedLength / download.totalLength) * 100)
+            .toFixed(2);
+        const downloadDetails = {
+          gid: download.gid,
+          uploadSpeed: `${uploadSpeed} Mb/s`,
+          downloadSpeed: `${downloadSpeed} Mb/s`,
+          completePercentage: `${progressPercentage} %`,
+          status: download.status,
+          downloadFiles: fileInfos,
+          canBePaused: true,
+          canBeUpdated: false
+        };
+        // Render download task, embed the rendered HTML fragment in a <div>
+        // element.
+        const container = document.createElement('div');
+        container.innerHTML =
+          Mustache.render(downloadTaskTemplate, downloadDetails);
+        container.id = `download-${download.gid}`;
+        // Append container to document fragment before updating download
+        // details and binding functions.
+        const docFragment = document.createDocumentFragment();
+        docFragment.appendChild(container);
+        // Update download details, check the checkbox if it has been
+        // selected.
+        checkSelectedFiles(docFragment, download.gid, download.files);
+        // Bind function to show download details.
+        docFragment.querySelector(`#${container.id}`).onclick = () => {
+          showDownloadDetails(download.gid);
+        };
+        // Bind functions to start/ pause button and stop button.
+        const startOrPauseButton =
+          docFragment.querySelector(`#download-startOrPause-${download.gid}`);
+        startOrPauseButton.onclick = () => {
+          forcePauseDownload(download.gid);
+        };
+        const stopButton =
+          docFragment.querySelector(`#download-stop-${download.gid}`);
+        stopButton.onclick = () => {
+          stopDownload(download.gid);
+        };
+        // Append document fragment to active downloads list.
+        activeDownloadsElement.appendChild(docFragment);
+      });
+    } catch (error) {
+      showErrorMessage('Unable to get active downloads.');
+    }
   };
 
   /**
-   * Gets waiting download tasks. This function assumes no more than 1000
-   * download tasks are waiting.
+   * Gets waiting download tasks. At most 1000 waiting downloads will be
+   * retrieved.
+   *
+   * @async
    */
-  const getWaitingDownloads = () => {
-    const parameters = [
-      // Start from beginning, offset is zero.
-      0,
-      // Get at most 1000 waiting download tasks.
-      1000
-    ];
-    xhrHelper(
-      'aria2.tellWaiting',
-      parameters,
-      (response) => {
-        response.result.forEach((download) => {
-          // Extract paths of files.
-          const fileInfos = [];
-          download.files.forEach((file) => {
-            fileInfos.push({
-              fileName: file.path
-            });
+  const getWaitingDownloads = async () => {
+    try {
+      const result = await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthToken,
+        method: 'aria2.tellWaiting',
+        parameters: [
+          // Start from beginning, offset is zero.
+          0,
+          // Get at most 1000 waiting download tasks.
+          1000
+        ]
+      });
+      result.forEach((download) => {
+        // Extract paths of files.
+        const fileInfos = [];
+        download.files.forEach((file) => {
+          fileInfos.push({
+            fileName: file.path
           });
-          // Define download task details for rendering.
-          const uploadSpeed =
-            speedInMbps(parseInt(download.uploadSpeed, RADIX_DECIMAL));
-          const downloadSpeed =
-            speedInMbps(parseInt(download.downloadSpeed, RADIX_DECIMAL));
-          const progressPercentage =
-            Number((download.completedLength / download.totalLength) * 100)
-              .toFixed(2);
-          const downloadDetails = {
-            gid: download.gid,
-            uploadSpeed: `${uploadSpeed} Mb/s`,
-            downloadSpeed: `${downloadSpeed} Mb/s`,
-            completePercentage: `${progressPercentage} %`,
-            status: download.status,
-            downloadFiles: fileInfos,
-            canBePaused: true,
-            canBeUpdated: true
-          };
-          // Render download task, embed the rendered HTML fragment in a <div>
-          // element.
-          const container = document.createElement('div');
-          container.innerHTML =
-            Mustache.render(downloadTaskTemplate, downloadDetails);
-          container.id = `download-${download.gid}`;
-          // Append container to document fragment before updating download
-          // details and binding functions.
-          const docFragment = document.createDocumentFragment();
-          docFragment.appendChild(container);
-          // Update download details, check the checkbox if it has been
-          // selected.
-          checkSelectedFiles(docFragment, download.gid, download.files);
-          // Bind function to show download details.
-          docFragment.querySelector(`#${container.id}`).onclick = () => {
-            showDownloadDetails(download.gid);
-          };
-          // Bind functions to start/ pause button and stop button.
-          const startOrPauseButton =
-            docFragment.querySelector(`#download-startOrPause-${download.gid}`);
-          // If download task is being paused, the button will resume
-          // download process, otherwise show error message.
-          startOrPauseButton.onclick = () => {
-            if (download.status === 'paused') {
-              resumeDownload(download.gid);
-            } else {
-              showErrorMessage('Cannot start non-paused download task.');
-            }
-          };
-          const stopButton =
-            docFragment.querySelector(`#download-stop-${download.gid}`);
-          stopButton.onclick = () => {
-            stopDownload(download.gid);
-          };
-          // Bind functions to buttons for select or unselect all files, and
-          // button for updating download task.
-          const selectAllButton = docFragment.querySelector(
-            `#download-${download.gid}-select-all-button`);
-          selectAllButton.onclick = () => {
-            selectAllFiles(download.gid);
-          };
-          const unselectAllButton = docFragment.querySelector(
-            `#download-${download.gid}-unselect-all-button`);
-          unselectAllButton.onclick = () => {
-            unselectAllFiles(download.gid);
-          };
-          const saveButton = docFragment.querySelector(
-            `#download-${download.gid}-save-button`);
-          saveButton.onclick = () => {
-            updateDownload(download.gid);
-          };
-          // Append document fragment to inactive downloads list.
-          inactiveDownloadsElement.appendChild(docFragment);
         });
-      },
-      () => {
-        showErrorMessage('Unable to get waiting downloads.');
-      }
-    );
+        // Define download task details for rendering.
+        const uploadSpeed =
+          speedInMbps(parseInt(download.uploadSpeed, RADIX_DECIMAL));
+        const downloadSpeed =
+          speedInMbps(parseInt(download.downloadSpeed, RADIX_DECIMAL));
+        const progressPercentage =
+          Number((download.completedLength / download.totalLength) * 100)
+            .toFixed(2);
+        const downloadDetails = {
+          gid: download.gid,
+          uploadSpeed: `${uploadSpeed} Mb/s`,
+          downloadSpeed: `${downloadSpeed} Mb/s`,
+          completePercentage: `${progressPercentage} %`,
+          status: download.status,
+          downloadFiles: fileInfos,
+          canBePaused: true,
+          canBeUpdated: true
+        };
+        // Render download task, embed the rendered HTML fragment in a <div>
+        // element.
+        const container = document.createElement('div');
+        container.innerHTML =
+          Mustache.render(downloadTaskTemplate, downloadDetails);
+        container.id = `download-${download.gid}`;
+        // Append container to document fragment before updating download
+        // details and binding functions.
+        const docFragment = document.createDocumentFragment();
+        docFragment.appendChild(container);
+        // Update download details, check the checkbox if it has been
+        // selected.
+        checkSelectedFiles(docFragment, download.gid, download.files);
+        // Bind function to show download details.
+        docFragment.querySelector(`#${container.id}`).onclick = () => {
+          showDownloadDetails(download.gid);
+        };
+        // Bind functions to start/ pause button and stop button.
+        const startOrPauseButton =
+          docFragment.querySelector(`#download-startOrPause-${download.gid}`);
+        // If download task is being paused, the button will resume
+        // download process, otherwise show error message.
+        startOrPauseButton.onclick = () => {
+          if (download.status === 'paused') {
+            resumeDownload(download.gid);
+          } else {
+            showErrorMessage('Cannot start non-paused download task.');
+          }
+        };
+        const stopButton =
+          docFragment.querySelector(`#download-stop-${download.gid}`);
+        stopButton.onclick = () => {
+          stopDownload(download.gid);
+        };
+        // Bind functions to buttons for select or unselect all files, and
+        // button for updating download task.
+        const selectAllButton = docFragment.querySelector(
+          `#download-${download.gid}-select-all-button`);
+        selectAllButton.onclick = () => {
+          selectAllFiles(download.gid);
+        };
+        const unselectAllButton = docFragment.querySelector(
+          `#download-${download.gid}-unselect-all-button`);
+        unselectAllButton.onclick = () => {
+          unselectAllFiles(download.gid);
+        };
+        const saveButton = docFragment.querySelector(
+          `#download-${download.gid}-save-button`);
+        saveButton.onclick = () => {
+          updateDownload(download.gid);
+        };
+        // Append document fragment to inactive downloads list.
+        inactiveDownloadsElement.appendChild(docFragment);
+      });
+    } catch (error) {
+      showErrorMessage('Unable to get waiting downloads.');
+    }
   };
 
   /**
-   * Gets stopped download tasks. This function assumes no more than 1000
-   * download tasks have been stopped.
+   * Gets stopped download tasks. At most 1000 stopped download tasks will be
+   * retrieved.
+   *
+   * @async
    */
-  const getStoppedDownloads = () => {
-    const parameters = [
-      // Starts from beginning, offset is zero.
-      0,
-      // Get at most 1000 stopped download tasks.
-      1000
-    ];
-    xhrHelper(
-      'aria2.tellStopped',
-      parameters,
-      (response) => {
-        response.result.forEach((download) => {
-          // Extract paths of files.
-          const fileInfos = [];
-          download.files.forEach((file) => {
-            fileInfos.push({
-              fileName: file.path
-            });
+  const getStoppedDownloads = async () => {
+    try {
+      const result = await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthToken,
+        method: 'aria2.tellStopped',
+        parameters: [
+          // Starts from beginning, offset is zero.
+          0,
+          // Get at most 1000 stopped download tasks.
+          1000
+        ]
+      });
+      result.forEach((download) => {
+        // Extract paths of files.
+        const fileInfos = [];
+        download.files.forEach((file) => {
+          fileInfos.push({
+            fileName: file.path
           });
-          // Define download task details for rendering.
-          const uploadSpeed =
-            speedInMbps(parseInt(download.uploadSpeed, RADIX_DECIMAL));
-          const downloadSpeed =
-            speedInMbps(parseInt(download.downloadSpeed, RADIX_DECIMAL));
-          const progressPercentage =
-            Number((download.completedLength / download.totalLength) * 100)
-              .toFixed(2);
-          const downloadDetails = {
-            gid: download.gid,
-            uploadSpeed: `${uploadSpeed} Mb/s`,
-            downloadSpeed: `${downloadSpeed} Mb/s`,
-            completePercentage: `${progressPercentage} %`,
-            status: download.status,
-            downloadFiles: fileInfos,
-            canBePaused: false,
-            canBeUpdated: false
-          };
-          // Render download task, embed the rendered HTML fragment in a <div>
-          // element
-          const container = document.createElement('div');
-          container.innerHTML =
-            Mustache.render(downloadTaskTemplate, downloadDetails);
-          container.id = `download-${download.gid}`;
-          // Append container to document fragment before updating download
-          // details and binding functions.
-          const docFragment = document.createDocumentFragment();
-          docFragment.appendChild(container);
-          // Update download details, check the checkbox if it has been
-          // selected.
-          checkSelectedFiles(docFragment, download.gid, download.files);
-          // Bind function to show download details.
-          docFragment.querySelector(`#${container.id}`).onclick = () => {
-            showDownloadDetails(download.gid);
-          };
-          // Bind functions to stop button.
-          const stopButton =
-            docFragment.querySelector(`#download-stop-${download.gid}`);
-          stopButton.onclick = () => {
-            removeDownload(download.gid);
-          };
-          // Append document fragment to inactive downloads list.
-          inactiveDownloadsElement.appendChild(container);
         });
-      },
-      () => {
-        showErrorMessage('Unable to get stopped downloads.');
-      }
-    );
+        // Define download task details for rendering.
+        const uploadSpeed =
+          speedInMbps(parseInt(download.uploadSpeed, RADIX_DECIMAL));
+        const downloadSpeed =
+          speedInMbps(parseInt(download.downloadSpeed, RADIX_DECIMAL));
+        const progressPercentage =
+          Number((download.completedLength / download.totalLength) * 100)
+            .toFixed(2);
+        const downloadDetails = {
+          gid: download.gid,
+          uploadSpeed: `${uploadSpeed} Mb/s`,
+          downloadSpeed: `${downloadSpeed} Mb/s`,
+          completePercentage: `${progressPercentage} %`,
+          status: download.status,
+          downloadFiles: fileInfos,
+          canBePaused: false,
+          canBeUpdated: false
+        };
+        // Render download task, embed the rendered HTML fragment in a <div>
+        // element
+        const container = document.createElement('div');
+        container.innerHTML =
+          Mustache.render(downloadTaskTemplate, downloadDetails);
+        container.id = `download-${download.gid}`;
+        // Append container to document fragment before updating download
+        // details and binding functions.
+        const docFragment = document.createDocumentFragment();
+        docFragment.appendChild(container);
+        // Update download details, check the checkbox if it has been
+        // selected.
+        checkSelectedFiles(docFragment, download.gid, download.files);
+        // Bind function to show download details.
+        docFragment.querySelector(`#${container.id}`).onclick = () => {
+          showDownloadDetails(download.gid);
+        };
+        // Bind functions to stop button.
+        const stopButton =
+          docFragment.querySelector(`#download-stop-${download.gid}`);
+        stopButton.onclick = () => {
+          removeDownload(download.gid);
+        };
+        // Append document fragment to inactive downloads list.
+        inactiveDownloadsElement.appendChild(container);
+      });
+    } catch (error) {
+      showErrorMessage('Unable to get stopped downloads.');
+    }
   };
 
   /**
@@ -689,8 +657,10 @@
    */
   const getDownloads = () => {
     clearChildren(activeDownloadsElement);
-    getActiveDownloads();
     clearChildren(inactiveDownloadsElement);
+    // Getting active, waiting, and stopped download tasks can be done in
+    // parallel, so await is not needed.
+    getActiveDownloads();
     getWaitingDownloads();
     getStoppedDownloads();
   };
@@ -795,7 +765,7 @@
     }
     rpcEndpoint = `${protocol}//${host}:${port}/jsonrpc`;
     if (token.length > 0) {
-      rpcAuthenticationToken = `token:${token}`;
+      rpcAuthToken = `token:${token}`;
     }
     hideCommandPanels();
     // Show statistics after configuring settings.
