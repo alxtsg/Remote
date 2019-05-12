@@ -107,6 +107,58 @@
   };
 
   /**
+   * Sends request to aria2.
+   *
+   * @async
+   *
+   * @param {object} requestOptions Request options.
+   * @param {string} requestOptions.rpcEndpoint The RPC endpoint.
+   * @param {object} requestOptions.authToken Authentication token. Set to null
+   *                                          if no authentication token has to
+   *                                          be sent.
+   * @param {string} requestOptions.method The RPC method.
+   * @param {Array} requestOptions.parameters The array of parameters Set to
+   *                                          empty array if no parameters has
+   *                                          to be sent.
+   *
+   * @returns {Promise} Resolves with the result object, or rejects with an
+   *                    Error.
+   */
+  const aria2Client = async (requestOptions) => {
+    const requestBody = {
+      jsonrpc: '2.0',
+      method: requestOptions.method,
+      params: [],
+      id: Date.now()
+    };
+    // If the authentication token is provided, place it at the front of the
+    // parameters.
+    if (requestOptions.authToken !== null) {
+      const params = [requestOptions.authToken];
+      params.push(...requestOptions.parameters);
+      requestBody.params = params;
+    } else {
+      requestBody.params = requestOptions.parameters;
+    }
+    try {
+      const response = await fetch(
+        requestOptions.rpcEndpoint,
+        {
+          method: 'POST',
+          body: JSON.stringify(requestBody)
+        }
+      );
+      const responseJson = await response.json();
+      if (responseJson.hasOwnProperty('error')) {
+        return Promise.reject(responseJson.error.message);
+      }
+      return Promise.resolve(responseJson.result);
+    } catch (error) {
+      return Promise.reject(error);
+    };
+  };
+
+  /**
    * Hides all command panels.
    */
   const hideCommandPanels = () => {
@@ -186,24 +238,25 @@
   /**
    * Adds a download task by URL.
    *
-   * @param {string} url File URL.
+   * @async
+   *
+   * @param {string} url File URL or magnet link.
    */
-  const addDownloadByUrl = (url) => {
-    const parameters = [
-      // As shown in the API document, the URL must be presented as an array,
-      // instead of a string, even if there is only one URL.
-      [url]
-    ];
-    xhrHelper(
-      'aria2.addUri',
-      parameters,
-      () => {
-        getDownloads();
-      },
-      () => {
-        showErrorMessage('Unable to add download task by URL.');
-      }
-    );
+  const addDownloadByUrl = async (url) => {
+    try {
+      await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthenticationToken,
+        method: 'aria2.addUri',
+        parameters: [
+          // Each URL has to be put in an array.
+          [url]
+        ]
+      });
+      getDownloads();
+    } catch (error) {
+      showErrorMessage('Unable to add download task by URL.');
+    }
   };
 
   /**
@@ -212,58 +265,55 @@
    * @param {string} fileInBase64 The BitTorrent file encoded in Base64
    *                              representation.
    */
-  const addDownloadByTorrent = (fileInBase64) => {
-    const parameters = [
-      fileInBase64
-    ];
-    xhrHelper(
-      'aria2.addTorrent',
-      parameters,
-      () => {
-        getDownloads();
-      },
-      () => {
-        showErrorMessage('Unable to add download task by BitTorrent file.');
-      }
-    );
+  const addDownloadByTorrent = async (fileInBase64) => {
+    try {
+      await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthenticationToken,
+        method: 'aria2.addTorrent',
+        parameters: [fileInBase64]
+      });
+      getDownloads();
+    } catch (error) {
+      showErrorMessage('Unable to add download task by BitTorrent file.');
+    }
   };
 
   /**
-   * Gets statistics.
+   * Gets statistics, including aria2 version and global traffic.
    */
-  const getStatistics = () => {
+  const getStatistics = async () => {
     // Get version.
-    const getVersionParameters = [];
-    xhrHelper(
-      'aria2.getVersion',
-      getVersionParameters,
-      (response) => {
-        document.getElementById('aria2-version').textContent =
-          response.result.version;
-      },
-      () => {
-        showErrorMessage('Unable to get aria2 version.');
-      }
-    );
+    try {
+      let result = await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthenticationToken,
+        method: 'aria2.getVersion',
+        parameters: []
+      });
+      document.getElementById('aria2-version').textContent = result.version;
+    } catch (error) {
+      showErrorMessage('Unable to get aria2 version.');
+    }
     // Get global traffic.
-    const getGlobalTrafficParameters = [];
-    xhrHelper(
-      'aria2.getGlobalStat',
-      getGlobalTrafficParameters,
-      (response) => {
-        const uploadSpeed =
-          speedInMbps(parseInt(response.result.uploadSpeed, RADIX_DECIMAL));
-        const downloadSpeed =
-          speedInMbps(parseInt(response.result.downloadSpeed, RADIX_DECIMAL));
-        document.getElementById('global-upload-speed').textContent =
-          `${uploadSpeed} Mb/s`;
-        document.getElementById('global-download-speed').textContent =
-          `${downloadSpeed} Mb/s`;
-      },
-      () => {
-        showErrorMessage('Unable to get global traffic statistics.');
-      }
-    );
+    try {
+      let result = await aria2Client({
+        rpcEndpoint,
+        authToken: rpcAuthenticationToken,
+        method: 'aria2.getGlobalStat',
+        parameters: []
+      });
+      const uploadSpeed =
+        speedInMbps(parseInt(result.uploadSpeed, RADIX_DECIMAL));
+      const downloadSpeed =
+        speedInMbps(parseInt(result.downloadSpeed, RADIX_DECIMAL));
+      document.getElementById('global-upload-speed').textContent =
+        `${uploadSpeed} Mb/s`;
+      document.getElementById('global-download-speed').textContent =
+        `${downloadSpeed} Mb/s`;
+    } catch (error) {
+      showErrorMessage('Unable to get global traffic statistics.');
+    }
   };
 
   /**
