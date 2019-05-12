@@ -6,7 +6,7 @@ A simple web client for [aria2](http://aria2.sourceforge.net/).
 
 ## Requirements ##
 
-* aria2 (`>=1.18.5`).
+* aria2 (`>=1.34.0`).
 * A web browser (e.g. Microsoft Edge, Mozilla Firefox, etc.).
 
 ## Installation ##
