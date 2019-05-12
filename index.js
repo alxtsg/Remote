@@ -25,48 +25,48 @@
   /**
    * Clears children nodes of a given node.
    *
-   * @param {Node} node The node which children nodes will be removed.
+   * @param {Node} node The node which it children nodes will be removed.
    */
-  function clearChildren(node) {
+  const clearChildren = (node) => {
     while (node.hasChildNodes()) {
       node.removeChild(node.firstChild);
     }
-  }
+  };
 
   /**
    * Shows error message.
    *
-   * @param {String} errorMessage Error message.
+   * @param {string} errorMessage Error message.
    */
-  function showErrorMessage(errorMessage) {
+  const showErrorMessage = (errorMessage) => {
     errorMessageElement.textContent = errorMessage;
     errorMessageElement.style.display = 'block';
-  }
+  };
 
   /**
    * Hides error message.
    */
-  function hideErrorMessage() {
+  const hideErrorMessage = () => {
     errorMessageElement.style.display = 'none';
-  }
+  };
 
   /**
    * Converts speed to megabit per second.
    *
-   * @param {Number} speed Speed in the unit bytes per second.
+   * @param {number} speed Speed in the unit bytes per second.
    *
-   * @returns {Number} Speed in the unit megabit per second, round to 2 digits
+   * @returns {number} Speed in the unit megabit per second, round to 2 digits
    *                   after the decimal point.
    */
-  function speedInMbps(speed) {
+  const speedInMbps = (speed) => {
     return Number((speed / 1000000) * 8).toFixed(2);
-  }
+  };
 
   /**
    * XMLHttpRequest helper function, helps sending request to aria2 RPC
    * interface.
    *
-   * @param {String} method RPC method.
+   * @param {string} method RPC method.
    * @param {Array} parameters RPC method parameters. Do not include RPC
    *                           authentication token as it is being added
    *                           automatically.
@@ -79,7 +79,7 @@
    *                                 to be a JSON object which is the
    *                                 response.
    */
-  function xhrHelper(method, parameters, successCallback, errorCallback) {
+  const xhrHelper = (method, parameters, successCallback, errorCallback) => {
     const xhr = new XMLHttpRequest();
     const requestBody = {
       jsonrpc: '2.0',
@@ -104,24 +104,24 @@
     };
     xhr.open('POST', rpcEndpoint);
     xhr.send(JSON.stringify(requestBody));
-  }
+  };
 
   /**
    * Hides all command panels.
    */
-  function hideCommandPanels() {
+  const hideCommandPanels = () => {
     const panels = document.getElementsByClassName('command-panel');
     Array.from(panels).forEach((panel) => {
       panel.style.display = 'none';
     });
-  }
+  };
 
   /**
    * Shows download details of a download task.
    *
    * @param {String} gid GID of the download task.
    */
-  function showDownloadDetails(gid) {
+  const showDownloadDetails = (gid) => {
     const details = document.querySelectorAll('div.download-details');
     const detailsId = `download-details-${gid}`;
     Array.from(details).forEach((detail) => {
@@ -131,17 +131,17 @@
         detail.style.display = 'none';
       }
     });
-  }
+  };
 
   /**
    * Checks the checkboxes of files which are selected to be downloaded.
    *
    * @param {DocumentFragment} docFragment The DocumentFragment holding
    *                                       download details DOM tree.
-   * @param {String} gid GID of the download task.
+   * @param {string} gid GID of the download task.
    * @param {Array} files Objects representing files in the download task.
    */
-  function checkSelectedFiles(docFragment, gid, files) {
+  const checkSelectedFiles = (docFragment, gid, files) => {
     const downloadFiles = docFragment.querySelectorAll(
       `#download-files-${gid} input[type="checkbox"]`);
     files.forEach((file, index) => {
@@ -151,33 +151,33 @@
         downloadFiles[index].checked = false;
       }
     });
-  }
+  };
 
   /**
    * Selects (checks) all files in a download task.
    *
-   * @param {String} gid GID of the download task.
+   * @param {string} gid GID of the download task.
    */
-  function selectAllFiles(gid) {
+  const selectAllFiles = (gid) => {
     const files = document.querySelectorAll(
       `#download-files-${gid} input[type="checkbox"]`);
     Array.from(files).forEach((file) => {
       file.checked = true;
     });
-  }
+  };
 
   /**
    * Unselects (unchecks) all files in a download task.
    *
-   * @param {String} gid GID of the download task.
+   * @param {string} gid GID of the download task.
    */
-  function unselectAllFiles(gid) {
+  const unselectAllFiles = (gid) => {
     const files = document.querySelectorAll(
       `#download-files-${gid} input[type="checkbox"]`);
     Array.from(files).forEach((file) => {
       file.checked = false;
     });
-  }
+  };
 
   /**
    * Core functions.
@@ -186,9 +186,9 @@
   /**
    * Adds a download task by URL.
    *
-   * @param {String} url File URL.
+   * @param {string} url File URL.
    */
-  function addDownloadByUrl(url) {
+  const addDownloadByUrl = (url) => {
     const parameters = [
       // As shown in the API document, the URL must be presented as an array,
       // instead of a string, even if there is only one URL.
@@ -204,15 +204,15 @@
         showErrorMessage('Unable to add download task by URL.');
       }
     );
-  }
+  };
 
   /**
    * Adds a download task by BitTorrent file.
    *
-   * @param {String} fileInBase64 The BitTorrent file encoded in Base64
+   * @param {string} fileInBase64 The BitTorrent file encoded in Base64
    *                              representation.
    */
-  function addDownloadByTorrent(fileInBase64) {
+  const addDownloadByTorrent = (fileInBase64) => {
     const parameters = [
       fileInBase64
     ];
@@ -226,12 +226,12 @@
         showErrorMessage('Unable to add download task by BitTorrent file.');
       }
     );
-  }
+  };
 
   /**
    * Gets statistics.
    */
-  function getStatistics() {
+  const getStatistics = () => {
     // Get version.
     const getVersionParameters = [];
     xhrHelper(
@@ -264,14 +264,14 @@
         showErrorMessage('Unable to get global traffic statistics.');
       }
     );
-  }
+  };
 
   /**
    * Forces a download task to be paused.
    *
-   * @param {String} gid GID of the download task.
+   * @param {string} gid GID of the download task.
    */
-  function forcePauseDownload(gid) {
+  const forcePauseDownload = (gid) => {
     const parameters = [
       gid
     ];
@@ -285,14 +285,14 @@
         showErrorMessage('Unable to pause download.');
       }
     );
-  }
+  };
 
   /**
    * Resumes a download task.
    *
-   * @param {String} gid GID of the download task.
+   * @param {string} gid GID of the download task.
    */
-  function resumeDownload(gid) {
+  const resumeDownload = (gid) => {
     const parameters = [
       gid
     ];
@@ -306,14 +306,14 @@
         showErrorMessage('Unable to resume download.');
       }
     );
-  }
+  };
 
   /**
    * Stops a download task.
    *
-   * @param {String} gid GID of the download task.
+   * @param {string} gid GID of the download task.
    */
-  function stopDownload(gid) {
+  const stopDownload = (gid) => {
     const parameters = [
       gid
     ];
@@ -327,14 +327,14 @@
         showErrorMessage('Unable to stop download.');
       }
     );
-  }
+  };
 
   /**
    * Removes a download task.
    *
-   * @param {String} gid GID of the download task.
+   * @param {string} gid GID of the download task.
    */
-  function removeDownload(gid) {
+  const removeDownload = (gid) => {
     const parameters = [
       gid
     ];
@@ -348,14 +348,14 @@
         showErrorMessage('Unable to remove download.');
       }
     );
-  }
+  };
 
   /**
    * Updates a download task.
    *
-   * @param {String} gid GID of the download task.
+   * @param {string} gid GID of the download task.
    */
-  function updateDownload(gid) {
+  const updateDownload = (gid) => {
     // Get indices of selected files.
     const files = Array.prototype.slice.call(
       document.getElementById(`download-files-${gid}`)
@@ -383,12 +383,12 @@
         showErrorMessage('Unable to update download.');
       }
     );
-  }
+  };
 
   /**
    * Gets active download tasks.
    */
-  function getActiveDownloads() {
+  const getActiveDownloads = () => {
     const parameters = [];
     xhrHelper(
       'aria2.tellActive',
@@ -456,13 +456,13 @@
         showErrorMessage('Unable to get active downloads.');
       }
     );
-  }
+  };
 
   /**
    * Gets waiting download tasks. This function assumes no more than 1000
    * download tasks are waiting.
    */
-  function getWaitingDownloads() {
+  const getWaitingDownloads = () => {
     const parameters = [
       // Start from beginning, offset is zero.
       0,
@@ -558,13 +558,13 @@
         showErrorMessage('Unable to get waiting downloads.');
       }
     );
-  }
+  };
 
   /**
    * Gets stopped download tasks. This function assumes no more than 1000
    * download tasks have been stopped.
    */
-  function getStoppedDownloads() {
+  const getStoppedDownloads = () => {
     const parameters = [
       // Starts from beginning, offset is zero.
       0,
@@ -632,18 +632,18 @@
         showErrorMessage('Unable to get stopped downloads.');
       }
     );
-  }
+  };
 
   /**
    * Gets download tasks.
    */
-  function getDownloads() {
+  const getDownloads = () => {
     clearChildren(activeDownloadsElement);
     getActiveDownloads();
     clearChildren(inactiveDownloadsElement);
     getWaitingDownloads();
     getStoppedDownloads();
-  }
+  };
 
   /**
    * Bind functions to UI components events.
