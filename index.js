@@ -6,6 +6,8 @@
   const RADIX_DECIMAL = 10;
 
   const errorMessageElement = document.getElementById('error-message');
+  const addByUrlPanel = document.getElementById('add-by-url-panel');
+  const addByTorrentPanel = document.getElementById('add-by-torrent-panel');
   const activeDownloadsElement = document.getElementById('active-downloads');
   const inactiveDownloadsElement =
     document.getElementById('inactive-downloads');
@@ -675,13 +677,13 @@
   document.getElementById('add-by-url-button').onclick = () => {
     hideErrorMessage();
     hideCommandPanels();
-    document.getElementById('add-by-url-panel').style.display = 'block';
+    addByUrlPanel.style.display = 'block';
   };
 
   /**
    * Handles submission of adding download task by URL.
    */
-  document.getElementById('add-by-url-panel').onsubmit = () => {
+  addByUrlPanel.onsubmit = () => {
     const url = document.getElementById('new-download-url').value;
     hideErrorMessage();
     // If RPC interface endpoint has not been configured, show error message and
@@ -696,8 +698,8 @@
       return false;
     }
     addDownloadByUrl(url);
-    // Clear URL in the input box.
-    document.getElementById('new-download-url').value = '';
+    // Reset the form.
+    addByUrlPanel.reset();
     return false;
   };
 
@@ -707,13 +709,13 @@
   document.getElementById('add-by-torrent-button').onclick = () => {
     hideErrorMessage();
     hideCommandPanels();
-    document.getElementById('add-by-torrent-panel').style.display = 'block';
+    addByTorrentPanel.style.display = 'block';
   };
 
   /**
    * Handles submission of adding download task by BitTorrent file.
    */
-  document.getElementById('add-by-torrent-panel').onsubmit = () => {
+  addByTorrentPanel.onsubmit = () => {
     const torrentFiles = document.getElementById('new-download-torrent').files;
     hideErrorMessage();
     // If RPC interface endpoint has not been configured, show error message and
@@ -736,6 +738,8 @@
       fileInBase64 =
         fileInBase64.substring(fileInBase64.indexOf('base64,') + 7);
       addDownloadByTorrent(fileInBase64);
+      // Reset the form.
+      addByTorrentPanel.reset();
     };
     fileReader.readAsDataURL(torrentFile);
     return false;
