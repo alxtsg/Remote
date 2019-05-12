@@ -1,0 +1,8 @@
+{
+  "id": 1557645328040,
+  "jsonrpc": "2.0",
+  "error": {
+    "code": 1,
+    "message": "Unauthorized"
+  }
+}
