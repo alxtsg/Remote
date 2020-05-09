@@ -58,6 +58,9 @@ export default class Aria2Client {
    * @throws When unable to complete the request.
    */
   async send(options) {
+    if (this.endpoint === null) {
+      throw new Error('Endpoint is not configured.');
+    }
     const body = {
       jsonrpc: '2.0',
       method: options.method,
