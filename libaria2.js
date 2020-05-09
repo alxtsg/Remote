@@ -45,6 +45,22 @@ export default class Aria2Client {
   }
 
   /**
+   * Calculates download progress.
+   *
+   * @param {number} completed Completed length of download, in bytes.
+   * @param {number} total Total length of download, in bytes.
+   *
+   * @returns {number} Progress, in percentage.
+   */
+  calculateProgress(completed, total) {
+    let progress = (completed / total);
+    if (Number.isNaN(progress)) {
+      return 0;
+    }
+    return (progress * 100).toFixed(2);
+  }
+
+  /**
    * Sends a request to the aria2 API.
    *
    * @async
@@ -269,7 +285,7 @@ export default class Aria2Client {
         this.toMbps(parseInt(result.downloadSpeed, RADIX_DECIMAL));
       const completedLength = parseInt(result.completedLength, RADIX_DECIMAL);
       const totalLength = parseInt(result.totalLength, RADIX_DECIMAL);
-      const progress = ((completedLength / totalLength) * 100).toFixed(2);
+      const progress = this.calculateProgress(completedLength, totalLength);
       return {
         gid: result.gid,
         uploadSpeed,
