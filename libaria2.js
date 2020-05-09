@@ -98,7 +98,7 @@ export default class Aria2Client {
    *
    * @throws When unable to add the task.
    */
-  async addDownloadByUrl(url) {
+  async addDownloadByURL(url) {
     await this.send({
       method: 'aria2.addUri',
       parameters: [
