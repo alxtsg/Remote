@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Remote</title>
+  <link rel="stylesheet" type="text/css" href="index.css" />
+</head>
+<body>
+  <h1>Remote</h1>
+  <p>
+    Version: <span id="version">(N/A)</span>,
+    Upload speed: <span id="upload-speed">(N/A)</span>,
+    Download speed: <span id="download-speed">(N/A)</span>
+  </p>
+  <p id="error">Error message here.</p>
+  <p>
+    <button id="add-by-url">Add by URL</button>
+    <button id="add-by-torrent">Add by torrent file</button>
+    <button id="settings">Settings</button>
+    <button id="refresh">Refresh</button>
+  </p>
+  <form id="url-form">
+    <p>
+      URL:
+      <input id="url" type="url" placeholder="https://www.example.com/" required="required" />
+      <input type="submit" value="Submit" />
+    </p>
+  </form>
+  <form id="torrent-file-form">
+    <p>
+      Torrent file:
+      <input id="torrent-file" type="file" accept=".torrent" required="required" />
+      <input type="submit" value="Submit" />
+    </p>
+  </form>
+  <form id="settings-form">
+    <p>
+      Host: <input id="host" type="text" placeholder="example.com" required="required" />
+      Port: <input id="port" type="number" placeholder="443" min="0" max="65535" required="required" />
+      Token: <input id="token" type="password" />
+      <input type="submit" value="Submit" />
+    </p>
+  </form>
+  <h2>Active</h2>
+  <div>
+    <p>
+      GID: <span class="gid">a1b2c3</span>,
+      Upload speed: <span class="upload-speed">12.34</span> Mbps,
+      Download speed: <span class="download-speed">56.78</span> Mbps,
+      Progress: <span class="progress">90.12</span>%,
+      Status: <span class="status">active</span>
+      <button>Details</button>
+      <button>Pause</button>
+      <button>Stop</button>
+    </p>
+    <div class="details">
+      <ul class="files">
+        <li><label><input type="checkbox" checked="checked" disabled="disabled">/home/alex/downloads/file1.txt</label></li>
+        <li><label><input type="checkbox" checked="checked" disabled="disabled">/home/alex/downloads/file2.txt</label></li>
+        <li><label><input type="checkbox" disabled="disabled">/home/alex/downloads/file3.txt</label></li>
+        <li><label><input type="checkbox" disabled="disabled">/home/alex/downloads/file4.txt</label></li>
+        <li><label><input type="checkbox" disabled="disabled">/home/alex/downloads/file5.txt</label></li>
+      </ul>
+    </div>
+  </div>
+  <div>
+    <p>
+      GID: <span class="gid">a1b2c3</span>,
+      Upload speed: <span class="upload-speed">34.56Mbps</span>,
+      Download speed: <span class="download-speed">78.90Mbps</span>,
+      Progress: <span class="progress">12.34%</span>,
+      Status: <span class="status">active</span>
+      <button>Details</button>
+      <button>Pause</button>
+      <button>Stop</button>
+    </p>
+  </div>
+  <h2>Waiting</h2>
+  <div>
+    <p>
+      GID: <span class="gid">a1b2c3</span>,
+      Upload speed: <span class="upload-speed">12.34</span> Mbps,
+      Download speed: <span class="download-speed">56.78</span> Mbps,
+      Progress: <span class="progress">90.12</span>%,
+      Status: <span class="status">waiting</span>
+      <button>Details</button>
+      <button>Pause</button>
+      <button>Stop</button>
+    </p>
+    <div class="details">
+      <ul class="files">
+        <li><label><input type="checkbox" checked="checked">/home/alex/downloads/file1.txt</label></li>
+        <li><label><input type="checkbox">/home/alex/downloads/file1.txt</label></li>
+        <li><label><input type="checkbox">/home/alex/downloads/file1.txt</label></li>
+        <li><label><input type="checkbox">/home/alex/downloads/file1.txt</label></li>
+        <li><label><input type="checkbox">/home/alex/downloads/file1.txt</label></li>
+      </ul>
+      <p>
+        <button>Select all</button>
+        <button>Unselect all</button>
+        <button>Update</button>
+      </p>
+    </div>
+  </div>
+  <div>
+    <p>
+      GID: <span class="gid">a1b2c3</span>,
+      Upload speed: <span class="upload-speed">12.34</span> Mbps,
+      Download speed: <span class="download-speed">56.78</span> Mbps,
+      Progress: <span class="progress">90.12</span>%,
+      Status: <span class="status">paused</span>
+      <button>Details</button>
+      <button>Resume</button>
+      <button>Stop</button>
+    </p>
+  </div>
+  <h2>Inactive</h2>
+  <div>
+    <p>
+      GID: <span class="gid">a1b2c3</span>,
+      Upload speed: <span class="upload-speed">12.34</span> Mbps,
+      Download speed: <span class="download-speed">56.78</span> Mbps,
+      Progress: <span class="progress">90.12</span>%,
+      Status: <span class="status">error</span>
+      <button>Details</button>
+      <button>Remove</button>
+    </p>
+    <div class="details">
+      <ul class="files">
+        <li><label><input type="checkbox" checked="checked" disabled="disabled">/home/alex/downloads/file1.txt</label></li>
+        <li><label><input type="checkbox" disabled="disabled">/home/alex/downloads/file1.txt</label></li>
+        <li><label><input type="checkbox" disabled="disabled">/home/alex/downloads/file1.txt</label></li>
+        <li><label><input type="checkbox" disabled="disabled">/home/alex/downloads/file1.txt</label></li>
+        <li><label><input type="checkbox" disabled="disabled">/home/alex/downloads/file1.txt</label></li>
+      </ul>
+    </div>
+  </div>
+  <div>
+    <p>
+      GID: <span class="gid">a1b2c3</span>,
+      Upload speed: <span class="upload-speed">12.34</span> Mbps,
+      Download speed: <span class="download-speed">56.78</span> Mbps,
+      Progress: <span class="progress">90.12</span>%,
+      Status: <span class="status">complete</span>
+      <button>Details</button>
+      <button>Remove</button>
+    </p>
+  </div>
+  <div>
+    <p>
+      GID: <span class="gid">a1b2c3</span>,
+      Upload speed: <span class="upload-speed">12.34</span> Mbps,
+      Download speed: <span class="download-speed">56.78</span> Mbps,
+      Progress: <span class="progress">90.12</span>%,
+      Status: <span class="status">removed</span>
+      <button>Details</button>
+      <button>Remove</button>
+    </p>
+  </div>
+  <template id="task-template">
+    <div>
+      <p class="info">
+        GID: <span class="gid"></span>,
+        Upload speed: <span class="upload-speed"></span>,
+        Download speed: <span class="download-speed"></span>,
+        Progress: <span class="progress"></span>,
+        Status: <span class="status"></span>
+      </p>
+      <div class="details">
+        <ul class="files">
+        </ul>
+        <p>
+          <button>Select all</button>
+          <button>Unselect all</button>
+          <button>Update</button>
+        </p>
+      </div>
+    </div>
+  </template>
+  <template id="pause-template">
+    <button>Pause</button>
+  </template>
+  <template id="resume-template">
+    <button>Resume</button>
+  </template>
+  <template id="stop-template">
+    <button>Stop</button>
+  </template>
+  <template id="remove-template">
+    <button>Remove</button>
+  </template>
+  <template id="file-template">
+    <li><label><input type="checkbox"></label></li>
+  </template>
+  <template id="file-controls-template">
+    <p>
+      <button>Select all</button>
+      <button>Unselect all</button>
+      <button>Update</button>
+    </p>
+  </template>
+</body>
+</html>
