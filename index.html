@@ -6,97 +6,114 @@
   <link rel="stylesheet" type="text/css" href="index.css" />
 </head>
 <body>
-  <div id="top-panel">
-    <h1>Remote</h1>
-    <div id="statistics">
-      Version: <span id="aria2-version">N/A</span>
-      Upload: <span id="global-upload-speed" class="speed">N/A</span>
-      Download: <span id="global-download-speed" class="speed">N/A</span>
-    </div>
+  <h1>Remote</h1>
+  <p>
+    Version: <span id="version">(N/A)</span>,
+    Upload speed: <span id="upload-speed">(N/A)</span>,
+    Download speed: <span id="download-speed">(N/A)</span>
+  </p>
+  <p id="error"></p>
+  <p>
+    <button id="add-by-url">Add by URL</button>
+    <button id="add-by-torrent">Add by torrent file</button>
+    <button id="settings">Settings</button>
+    <button id="refresh">Refresh</button>
+  </p>
+  <form id="url-form">
+    <p>
+      URL:
+      <input
+        id="url"
+        type="url"
+        placeholder="https://www.example.com/"
+        required="required" />
+      <input type="submit" value="Submit" />
+    </p>
+  </form>
+  <form id="torrent-file-form">
+    <p>
+      Torrent file:
+      <input
+        id="torrent-file"
+        type="file"
+        accept=".torrent"
+        required="required" />
+      <input type="submit" value="Submit" />
+    </p>
+  </form>
+  <form id="settings-form">
+    <p>
+      Host:
+      <input
+        id="host"
+        type="text"
+        placeholder="example.com"
+        required="required" />
+      Port:
+      <input
+        id="port"
+        type="number"
+        placeholder="443"
+        min="0"
+        max="65535"
+        required="required" />
+      Token: <input id="token" type="password" />
+      <input type="submit" value="Submit" />
+    </p>
+  </form>
+  <h2>Active</h2>
+  <div id="active-downloads">
+    <p>(N/A)</p>
   </div>
-  <div id="command-panel">
-    <div>
-      <button id="add-by-url-button">Add by URL</button>
-      <button id="add-by-torrent-button">Add by torrent file</button>
-      <button id="refresh-button">Refresh</button>
-      <button id="settings-button">Settings</button>
-    </div>
-    <form id="add-by-url-panel" class="command-panel">
-      <label>
-        URL
-        <input id="new-download-url" type="text" placeholder="http://www.example.com/file.torrent" required="required" />
-      </label>
-      <input type="submit" value="Add" />
-    </form>
-    <form id="add-by-torrent-panel" class="command-panel">
-      <label>
-        Torrent file
-        <input id="new-download-torrent" type="file" accept="application/x-bittorrent" required="required" />
-      </label>
-      <input type="submit" value="Add" />
-    </form>
-    <form id="settings-panel" class="command-panel">
-      <label>
-        Host
-        <input id="aria2-host" type="text" placeholder="127.0.0.1" required="required" />
-      </label>
-      <label>
-        Port
-        <input id="aria2-port" type="text" placeholder="6800" required="required" />
-      </label>
-      <label>
-        Token
-        <input id="aria2-token" type="password" />
-      </label>
-      <input type="submit" value="Save" />
-    </form>
+  <h2>Waiting</h2>
+  <div id="waiting-downloads">
+    <p>(N/A)</p>
   </div>
-  <div id="error-message"></div>
-  <div id="downloads-box">
-    <div>
-      <div class="header-text downloads-box-header-text">Active downloads</div>
-      <div id="active-downloads"></div>
-    </div>
-    <div>
-      <div class="header-text downloads-box-header-text">Inactive downloads</div>
-      <div id="inactive-downloads"></div>
-    </div>
+  <h2>Inactive</h2>
+  <div id="inactive-downloads">
+    <p>(N/A)</p>
   </div>
-  <div id="download-task-template" class="template">
-    <div id="download-{{gid}}">
-      <p>
-        <span>
-          GID: <span class="gid">{{gid}}</span>
-          Upload: <span class="speed">{{uploadSpeed}}</span>
-          Download: <span class="speed">{{downloadSpeed}}</span>
-          Percentage: <span class="complete-percentage">{{completePercentage}}</span>
-          Status: <span class="download-status">{{status}}</span>
-          {{#canBePaused}}
-            <button id="download-startOrPause-{{gid}}">Start / Pause</button>
-          {{/canBePaused}}
-          <button id="download-stop-{{gid}}">Stop</button>
-        </span>
+  <template id="task-template">
+    <div>
+      <p class="info">
+        GID: <span class="gid"></span>,
+        Upload speed: <span class="upload-speed"></span> Mbps,
+        Download speed: <span class="download-speed"></span> Mbps,
+        Progress: <span class="progress"></span>%,
+        Status: <span class="status"></span>
       </p>
-      <div class="download-details" id="download-details-{{gid}}">
-        <p class="download-files" id="download-files-{{gid}}">
-          {{#downloadFiles}}
-            <label><input type="checkbox">{{fileName}}</label>
-          {{/downloadFiles}}
-        </p>
-        <p>
-          {{#canBeUpdated}}
-            <button id="download-{{gid}}-select-all-button">Select all</button>
-            <button id="download-{{gid}}-unselect-all-button">Unselect all</button>
-            <button id="download-{{gid}}-save-button">Save</button>
-          {{/canBeUpdated}}
-        </p>
+      <div class="details">
+        <ul class="files">
+        </ul>
       </div>
     </div>
-  </div>
-  <script type="application/javascript"
-    src="//cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"
-    integrity="sha256-iaqfO5ue0VbSGcEiQn+OeXxnxAMK2+QgHXIDA5bWtGI="
-    crossorigin="anonymous"></script>
-  <script type="application/javascript" src="index.js"></script>
+  </template>
+  <template id="details-button-template">
+    <button>Details</button>
+  </template>
+  <template id="pause-button-template">
+    <button>Pause</button>
+  </template>
+  <template id="resume-button-template">
+    <button>Resume</button>
+  </template>
+  <template id="stop-button-template">
+    <button>Stop</button>
+  </template>
+  <template id="remove-button-template">
+    <button>Remove</button>
+  </template>
+  <template id="file-template">
+    <li><label><input type="checkbox" class="file-checkbox"></label></li>
+  </template>
+  <template id="files-control-template">
+    <p>
+      <button class="select-all">Select all</button>
+      <button class="unselect-all">Unselect all</button>
+      <button class="update">Update</button>
+    </p>
+  </template>
+  <script type="module" src="./libaria2.js"></script>
+  <script type="module" src="./index.js"></script>
 </body>
 </html>

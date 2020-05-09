@@ -1,66 +1,18 @@
 body {
   background-color: black;
-  color: #d3d3d3;
-  font-family: Arial, Helvetica, sans-serif;
+  color: #aaaaaa;
+  font-family: "Courier New", Courier, monospace;
 }
 
-#statistics {
-  margin-bottom: 0.3em;
-}
-
-div.header-text {
-  font-size: larger;
-  font-weight: bold;
-}
-
-div.downloads-box-header-text {
-  margin-top: 1em;
-}
-
-#aria2-version, span.speed, span.gid, span.complete-percentage,
-span.download-status {
-  margin-right: 3em;
-}
-
-form.command-panel, div.command-panel {
-  margin: 0.3em 0em;
-}
-
-#add-by-url-panel, #add-by-torrent-panel {
-  display: none;
-}
-
-#settings-panel input {
-  display: block;
-  margin-bottom: 0.3em;
-}
-
-input[type='text'], input[type='password'] {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-#new-download-url {
-  width: 20em;
-}
-
-#error-message {
+#error {
   color: #ff4136;
   display: none;
-  margin: 0.3em 0em;
 }
 
-span.gid {
-  font-family: monospace;
-}
-
-div.download-details {
+#url-form, #torrent-file-form {
   display: none;
 }
 
-p.download-files label {
-  display: block;
-}
-
-div.template {
+.details {
   display: none;
 }

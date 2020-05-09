@@ -1,799 +1,623 @@
 'use strict';
 
-(() => {
-  const Mustache = window.Mustache;
+/**
+ * @typedef {import('./type-def').Task} Task
+ * @typedef {import('./type-def').TaskFile} TaskFile
+ */
 
-  const RADIX_DECIMAL = 10;
+import Aria2Client from './libaria2.js';
 
-  const errorMessage = document.getElementById('error-message');
-  const addByUrlPanel = document.getElementById('add-by-url-panel');
-  const addByTorrentPanel = document.getElementById('add-by-torrent-panel');
-  const activeDownloads = document.getElementById('active-downloads');
-  const inactiveDownloads = document.getElementById('inactive-downloads');
-  const downloadTaskTemplate =
-    document.getElementById('download-task-template').innerHTML;
+const versionPanel = document.getElementById('version');
+const uploadSpeedPanel = document.getElementById('upload-speed');
+const downloadSpeedPanel = document.getElementById('download-speed');
+const errorPanel = document.getElementById('error');
+const addByURLButton = document.getElementById('add-by-url');
+const addByTorrentButton = document.getElementById('add-by-torrent');
+const settingsButton = document.getElementById('settings');
+const refreshButton = document.getElementById('refresh');
+const urlForm = document.getElementById('url-form');
+const torrentFileForm = document.getElementById('torrent-file-form');
+const settingsForm = document.getElementById('settings-form');
+const activeDownloads = document.getElementById('active-downloads');
+const waitingDownloads = document.getElementById('waiting-downloads');
+const inactiveDownloads = document.getElementById('inactive-downloads');
+const taskTemplate = document.getElementById('task-template');
+const detailsTemplate = document.getElementById('details-button-template');
+const pauseTemplate = document.getElementById('pause-button-template');
+const resumeTemplate = document.getElementById('resume-button-template');
+const stopTemplate = document.getElementById('stop-button-template');
+const removeTemplate = document.getElementById('remove-button-template');
+const fileTemplate = document.getElementById('file-template');
+const filesControlTemplate = document.getElementById('files-control-template');
 
-  // The aria2 RPC endpoint.
-  let rpcEndpoint = null;
+const MAX_WAITING = 1000;
+const MAX_STOPPED = 1000;
 
-  // The aria2 RPC interface authentication token.
-  let rpcAuthToken = null;
+const client = new Aria2Client();
 
-  /**
-   * Utility functions.
-   */
+/**
+ * Renders a p element with "(N/A)" as its child text node.
+ *
+ * @returns {Element} Rendered element.
+ */
+const renderNA = () => {
+  const pElement = document.createElement('p');
+  pElement.append('(N/A)');
+  return pElement;
+};
 
-  /**
-   * Clears children nodes of a given node.
-   *
-   * @param {Node} node The node which it children nodes will be removed.
-   */
-  const clearChildren = (node) => {
-    while (node.hasChildNodes()) {
-      node.removeChild(node.firstChild);
-    }
-  };
-
-  /**
-   * Shows error message.
-   *
-   * @param {string} message Error message.
-   */
-  const showErrorMessage = (message) => {
-    errorMessage.textContent = message;
-    errorMessage.style.display = 'block';
-  };
-
-  /**
-   * Hides error message.
-   */
-  const hideErrorMessage = () => {
-    errorMessage.style.display = 'none';
-  };
-
-  /**
-   * Converts speed to megabit per second.
-   *
-   * @param {number} speed Speed in the unit bytes per second.
-   *
-   * @returns {number} Speed in the unit megabit per second, round to 2 digits
-   *                   after the decimal point.
-   */
-  const speedInMbps = (speed) => {
-    return Number((speed / 1000000) * 8).toFixed(2);
-  };
-
-  /**
-   * Sends request to aria2.
-   *
-   * @async
-   *
-   * @param {object} requestOptions Request options.
-   * @param {string} requestOptions.rpcEndpoint The RPC endpoint.
-   * @param {object} requestOptions.authToken Authentication token. Set to null
-   *                                          if no authentication token has to
-   *                                          be sent.
-   * @param {string} requestOptions.method The RPC method.
-   * @param {Array} requestOptions.parameters The array of parameters Set to
-   *                                          empty array if no parameters has
-   *                                          to be sent.
-   *
-   * @returns {Promise} Resolves with the result object, or rejects with an
-   *                    Error.
-   */
-  const aria2Client = async (requestOptions) => {
-    const requestBody = {
-      jsonrpc: '2.0',
-      method: requestOptions.method,
-      params: [],
-      id: Date.now()
-    };
-    // If the authentication token is provided, place it at the front of the
-    // parameters.
-    if (requestOptions.authToken !== null) {
-      const params = [requestOptions.authToken];
-      params.push(...requestOptions.parameters);
-      requestBody.params = params;
+/**
+ * Renders details button.
+ *
+ * @param {string} gid Task ID.
+ *
+ * @returns {Node} Rendered node.
+ */
+const renderDetailsButton = (gid) => {
+  const cloned = detailsTemplate.content.cloneNode(true);
+  cloned.querySelector('button').onclick = () => {
+    const details = document.getElementById(`${gid}-details`);
+    if (details.style.display === 'block') {
+      details.style.display = 'none';
     } else {
-      requestBody.params = requestOptions.parameters;
-    }
-    try {
-      const response = await fetch(
-        requestOptions.rpcEndpoint,
-        {
-          method: 'POST',
-          body: JSON.stringify(requestBody)
-        }
-      );
-      const responseJson = await response.json();
-      if (responseJson.hasOwnProperty('error')) {
-        return Promise.reject(responseJson.error.message);
-      }
-      return Promise.resolve(responseJson.result);
-    } catch (error) {
-      return Promise.reject(error);
+      details.style.display = 'block';
     }
   };
+  return cloned;
+};
 
-  /**
-   * Hides all command panels.
-   */
-  const hideCommandPanels = () => {
-    const panels = document.getElementsByClassName('command-panel');
-    Array.from(panels).forEach((panel) => {
-      panel.style.display = 'none';
+/**
+ * Renders pause button.
+ *
+ * @param {string} gid Task ID.
+ *
+ * @returns {Node} Rendered node.
+ */
+const renderPauseButton = (gid) => {
+  const cloned = pauseTemplate.content.cloneNode(true);
+  cloned.querySelector('button').onclick = () => {
+    pauseTask(gid);
+  };
+  return cloned;
+};
+
+/**
+ * Renders resume button.
+ *
+ * @param {string} gid Task ID.
+ *
+ * @returns {Node} Rendered node.
+ */
+const renderResumeButton = (gid) => {
+  const cloned = resumeTemplate.content.cloneNode(true);
+  cloned.querySelector('button').onclick = () => {
+    resumeTask(gid);
+  };
+  return cloned;
+};
+
+/**
+ * Renders stop button.
+ *
+ * @param {string} gid Task ID.
+ *
+ * @returns {Node} Rendered node.
+ */
+const renderStopButton = (gid) => {
+  const cloned = stopTemplate.content.cloneNode(true);
+  cloned.querySelector('button').onclick = () => {
+    stopTask(gid);
+  };
+  return cloned;
+};
+
+/**
+ * Renders remove button.
+ *
+ * @param {string} gid Task ID.
+ *
+ * @returns {Node} Rendered node.
+ */
+const renderRemoveButton = (gid) => {
+  const cloned = removeTemplate.content.cloneNode(true);
+  cloned.querySelector('button').onclick = () => {
+    removeTask(gid);
+  };
+  return cloned;
+};
+
+/**
+ * Renders the file list of a download task.
+ *
+ * @param {string} gid Task ID.
+ * @param {TaskFile[]} files Files to be rendered.
+ * @param {boolean} isChangeable Whether the selected files are changeable.
+ *
+ * @returns {Node} Rendered node.
+ */
+const renderFileList = (gid, files, isChangeable) => files.map((file) => {
+  const cloned = fileTemplate.content.cloneNode(true);
+  const checkbox = cloned.querySelector('.file-checkbox');
+  checkbox.dataset.gid = gid;
+  if (file.isSelected) {
+    checkbox.checked = true;
+  }
+  if (!isChangeable) {
+    checkbox.disabled = true;
+  }
+  const label = cloned.querySelector('label');
+  if (file.path.length === 0) {
+    label.append('(N/A)');
+  } else {
+    label.append(file.path);
+  }
+  return cloned;
+});
+
+/**
+ * Renders the files control.
+ *
+ * @param {string} gid Task ID.
+ *
+ * @returns {Node} Rendered node.
+ */
+const renderFilesControl = (gid) => {
+  const cloned = filesControlTemplate.content.cloneNode(true);
+  // The checkboxes cannot be cached here using document.querySelectorAll()
+  // because they do not exist on the page at this moment. In addition, the
+  // checkboxes cannot be cached here using cloned.querySelectorAll() because
+  // the references are lost once the rendering is completed and appended to the
+  // page.
+  const selector = `input[data-gid="${gid}"]`;
+  cloned.querySelector('.select-all').onclick = () => {
+    document.querySelectorAll(selector).forEach((checkbox) => {
+      checkbox.checked = true;
     });
   };
-
-  /**
-   * Shows download details of a download task.
-   *
-   * @param {String} gid GID of the download task.
-   */
-  const showDownloadDetails = (gid) => {
-    const details = document.querySelectorAll('div.download-details');
-    const detailsId = `download-details-${gid}`;
-    Array.from(details).forEach((detail) => {
-      if (detail.id === detailsId) {
-        detail.style.display = 'block';
-      } else {
-        detail.style.display = 'none';
-      }
+  cloned.querySelector('.unselect-all').onclick = () => {
+    document.querySelectorAll(selector).forEach((checkbox) => {
+      checkbox.checked = false;
     });
   };
-
-  /**
-   * Checks the checkboxes of files which are selected to be downloaded.
-   *
-   * @param {DocumentFragment} docFragment The DocumentFragment holding
-   *                                       download details DOM tree.
-   * @param {string} gid GID of the download task.
-   * @param {Array} files Objects representing files in the download task.
-   */
-  const checkSelectedFiles = (docFragment, gid, files) => {
-    const downloadFiles = docFragment.querySelectorAll(
-      `#download-files-${gid} input[type="checkbox"]`);
-    files.forEach((file, index) => {
-      if (file.selected === 'true') {
-        downloadFiles[index].checked = true;
-      } else {
-        downloadFiles[index].checked = false;
-      }
-    });
-  };
-
-  /**
-   * Selects (checks) all files in a download task.
-   *
-   * @param {string} gid GID of the download task.
-   */
-  const selectAllFiles = (gid) => {
-    const files = document.querySelectorAll(
-      `#download-files-${gid} input[type="checkbox"]`);
-    Array.from(files).forEach((file) => {
-      file.checked = true;
-    });
-  };
-
-  /**
-   * Unselects (unchecks) all files in a download task.
-   *
-   * @param {string} gid GID of the download task.
-   */
-  const unselectAllFiles = (gid) => {
-    const files = document.querySelectorAll(
-      `#download-files-${gid} input[type="checkbox"]`);
-    Array.from(files).forEach((file) => {
-      file.checked = false;
-    });
-  };
-
-  /**
-   * Core functions.
-   */
-
-  /**
-   * Adds a download task by URL.
-   *
-   * @async
-   *
-   * @param {string} url File URL or magnet link.
-   */
-  const addDownloadByUrl = async (url) => {
-    try {
-      await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.addUri',
-        parameters: [
-          // Each URL has to be put in an array.
-          [url]
-        ]
-      });
-      getDownloads();
-    } catch (error) {
-      showErrorMessage('Unable to add download task by URL.');
-    }
-  };
-
-  /**
-   * Adds a download task by BitTorrent file.
-   *
-   * @async
-   *
-   * @param {string} fileInBase64 The BitTorrent file encoded in Base64
-   *                              representation.
-   */
-  const addDownloadByTorrent = async (fileInBase64) => {
-    try {
-      await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.addTorrent',
-        parameters: [fileInBase64]
-      });
-      getDownloads();
-    } catch (error) {
-      showErrorMessage('Unable to add download task by BitTorrent file.');
-    }
-  };
-
-  /**
-   * Gets statistics, including aria2 version and global traffic.
-   *
-   * @async
-   */
-  const getStatistics = async () => {
-    // Get version.
-    try {
-      const result = await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.getVersion',
-        parameters: []
-      });
-      document.getElementById('aria2-version').textContent = result.version;
-    } catch (error) {
-      showErrorMessage('Unable to get aria2 version.');
-    }
-    // Get global traffic.
-    try {
-      const result = await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.getGlobalStat',
-        parameters: []
-      });
-      const uploadSpeed =
-        speedInMbps(parseInt(result.uploadSpeed, RADIX_DECIMAL));
-      const downloadSpeed =
-        speedInMbps(parseInt(result.downloadSpeed, RADIX_DECIMAL));
-      document.getElementById('global-upload-speed').textContent =
-        `${uploadSpeed} Mb/s`;
-      document.getElementById('global-download-speed').textContent =
-        `${downloadSpeed} Mb/s`;
-    } catch (error) {
-      showErrorMessage('Unable to get global traffic statistics.');
-    }
-  };
-
-  /**
-   * Forces a download task to be paused.
-   *
-   * @async
-   *
-   * @param {string} gid GID of the download task.
-   */
-  const forcePauseDownload = async (gid) => {
-    try {
-      await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.forcePause',
-        parameters: [gid]
-      });
-      getDownloads();
-    } catch (error) {
-      showErrorMessage('Unable to pause download.');
-    }
-  };
-
-  /**
-   * Resumes a download task.
-   *
-   * @async
-   *
-   * @param {string} gid GID of the download task.
-   */
-  const resumeDownload = async (gid) => {
-    try {
-      await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.unpause',
-        parameters: [gid]
-      });
-      getDownloads();
-    } catch (error) {
-      showErrorMessage('Unable to resume download.');
-    }
-  };
-
-  /**
-   * Stops a download task.
-   *
-   * @async
-   *
-   * @param {string} gid GID of the download task.
-   */
-  const stopDownload = async (gid) => {
-    try {
-      await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.forceRemove',
-        parameters: [gid]
-      });
-      getDownloads();
-    } catch (error) {
-      showErrorMessage('Unable to stop download.');
-    }
-  };
-
-  /**
-   * Removes a download task.
-   *
-   * @async
-   *
-   * @param {string} gid GID of the download task.
-   */
-  const removeDownload = async (gid) => {
-    try {
-      await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.removeDownloadResult',
-        parameters: [gid]
-      });
-      getDownloads();
-    } catch (error) {
-      showErrorMessage('Unable to remove download.');
-    }
-  };
-
-  /**
-   * Updates a download task.
-   *
-   * @async
-   *
-   * @param {string} gid GID of the download task.
-   */
-  const updateDownload = async (gid) => {
-    // Get indices of selected files.
-    const container = document.getElementById(`download-files-${gid}`);
-    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-    const files = Array.from(checkboxes);
-    const selectedFileIndices = [];
-    files.forEach((file, index) => {
-      if (file.checked) {
-        // Note that the file index used in aria2 begins from 1, not 0.
-        selectedFileIndices.push(index + 1);
+  cloned.querySelector('.update').onclick = () => {
+    const indices = [];
+    document.querySelectorAll(selector).forEach((checkbox, index) => {
+      if (checkbox.checked) {
+        // The index of file starts from 1.
+        indices.push(index + 1);
       }
     });
-    try {
-      await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.changeOption',
-        parameters: [
-          gid,
-          {
-            'select-file': selectedFileIndices.join(',')
-          }
-        ]
-      });
-      getDownloads();
-    } catch (error) {
-      showErrorMessage('Unable to update download.');
-    }
+    updateTask(gid, indices);
   };
+  return cloned;
+};
 
-  /**
-   * Gets active download tasks.
-   *
-   * @async
-   */
-  const getActiveDownloads = async () => {
-    try {
-      const result = await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.tellActive',
-        parameters: []
-      });
-      result.forEach((download) => {
-        // Extract paths of files.
-        const fileInfos = [];
-        download.files.forEach((file) => {
-          fileInfos.push({
-            fileName: file.path
-          });
-        });
-        // Define download task details for rendering.
-        const uploadSpeed =
-          speedInMbps(parseInt(download.uploadSpeed, RADIX_DECIMAL));
-        const downloadSpeed =
-          speedInMbps(parseInt(download.downloadSpeed, RADIX_DECIMAL));
-        const progressPercentage =
-          Number((download.completedLength / download.totalLength) * 100)
-            .toFixed(2);
-        const downloadDetails = {
-          gid: download.gid,
-          uploadSpeed: `${uploadSpeed} Mb/s`,
-          downloadSpeed: `${downloadSpeed} Mb/s`,
-          completePercentage: `${progressPercentage} %`,
-          status: download.status,
-          downloadFiles: fileInfos,
-          canBePaused: true,
-          canBeUpdated: false
-        };
-        // Render download task, embed the rendered HTML fragment in a <div>
-        // element.
-        const container = document.createElement('div');
-        container.innerHTML =
-          Mustache.render(downloadTaskTemplate, downloadDetails);
-        container.id = `download-${download.gid}`;
-        // Append container to document fragment before updating download
-        // details and binding functions.
-        const docFragment = document.createDocumentFragment();
-        docFragment.appendChild(container);
-        // Update download details, check the checkbox if it has been
-        // selected.
-        checkSelectedFiles(docFragment, download.gid, download.files);
-        // Bind function to show download details.
-        docFragment.querySelector(`#${container.id}`).onclick = () => {
-          showDownloadDetails(download.gid);
-        };
-        // Bind functions to start/ pause button and stop button.
-        const startOrPauseButton =
-          docFragment.querySelector(`#download-startOrPause-${download.gid}`);
-        startOrPauseButton.onclick = () => {
-          forcePauseDownload(download.gid);
-        };
-        const stopButton =
-          docFragment.querySelector(`#download-stop-${download.gid}`);
-        stopButton.onclick = () => {
-          stopDownload(download.gid);
-        };
-        // Append document fragment to active downloads list.
-        activeDownloads.appendChild(docFragment);
-      });
-    } catch (error) {
-      showErrorMessage('Unable to get active downloads.');
-    }
+/**
+ * Renders a download task.
+ *
+ * @param {Task} task Download task to be rendered.
+ * @param {object} options Rendering options.
+ * @param {boolean} options.isPausable Whether the task can be paused.
+ * @param {boolean} options.isResumable Whether the task can be resumed.
+ * @param {boolean} options.isStoppable Whether the task can be stopped.
+ * @param {boolean} options.isRemovable Whether the task can be removed.
+ * @param {boolean} options.isUpdatable Whether the file list can be updated.
+ *
+ * @returns {Node} Rendered node.
+ */
+const renderTask = (task, options) => {
+  const cloned = taskTemplate.content.cloneNode(true);
+  cloned.querySelector('.gid').append(task.gid);
+  cloned.querySelector('.upload-speed').append(task.uploadSpeed);
+  cloned.querySelector('.download-speed').append(task.downloadSpeed);
+  cloned.querySelector('.progress').append(task.progress);
+  cloned.querySelector('.status').append(task.status);
+  cloned.querySelector('.info').append(renderDetailsButton(task.gid));
+  if (options.isPausable) {
+    cloned.querySelector('.info').append(renderPauseButton(task.gid));
+  }
+  if (options.isResumable) {
+    cloned.querySelector('.info').append(renderResumeButton(task.gid));
+  }
+  if (options.isStoppable) {
+    cloned.querySelector('.info').append(renderStopButton(task.gid));
+  }
+  if (options.isRemovable) {
+    cloned.querySelector('.info').append(renderRemoveButton(task.gid));
+  }
+  cloned.querySelector('.details').id = `${task.gid}-details`;
+  cloned.querySelector('.files').append(
+    ...renderFileList(task.gid, task.files, options.isUpdatable)
+  );
+  if (options.isUpdatable) {
+    cloned.querySelector('.details').append(renderFilesControl(task.gid));
+  }
+  return cloned;
+};
+
+/**
+ * Renders active download tasks.
+ *
+ * @param {Task[]} tasks Download tasks to be rendered.
+ *
+ * @returns {Node[]} Rendered nodes.
+ */
+const renderActiveDownloads = (tasks) => tasks.map((task) => {
+  // While aria2 allows updating an active download task, it takes some time
+  // to apply the changes. If the same task is being retrieved from the API too
+  // quick after the update, the selected file(s) would remain unchanged in the
+  // response. In order not to confuse the user, disable updating an active
+  // download task.
+  const options = {
+    isPausable: true,
+    isResumable: false,
+    isStoppable: true,
+    isRemovable: false,
+    isUpdatable: false
   };
+  return renderTask(task, options);
+});
 
-  /**
-   * Gets waiting download tasks. At most 1000 waiting downloads will be
-   * retrieved.
-   *
-   * @async
-   */
-  const getWaitingDownloads = async () => {
-    try {
-      const result = await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.tellWaiting',
-        parameters: [
-          // Start from beginning, offset is zero.
-          0,
-          // Get at most 1000 waiting download tasks.
-          1000
-        ]
-      });
-      result.forEach((download) => {
-        // Extract paths of files.
-        const fileInfos = [];
-        download.files.forEach((file) => {
-          fileInfos.push({
-            fileName: file.path
-          });
-        });
-        // Define download task details for rendering.
-        const uploadSpeed =
-          speedInMbps(parseInt(download.uploadSpeed, RADIX_DECIMAL));
-        const downloadSpeed =
-          speedInMbps(parseInt(download.downloadSpeed, RADIX_DECIMAL));
-        const progressPercentage =
-          Number((download.completedLength / download.totalLength) * 100)
-            .toFixed(2);
-        const downloadDetails = {
-          gid: download.gid,
-          uploadSpeed: `${uploadSpeed} Mb/s`,
-          downloadSpeed: `${downloadSpeed} Mb/s`,
-          completePercentage: `${progressPercentage} %`,
-          status: download.status,
-          downloadFiles: fileInfos,
-          canBePaused: true,
-          canBeUpdated: true
-        };
-        // Render download task, embed the rendered HTML fragment in a <div>
-        // element.
-        const container = document.createElement('div');
-        container.innerHTML =
-          Mustache.render(downloadTaskTemplate, downloadDetails);
-        container.id = `download-${download.gid}`;
-        // Append container to document fragment before updating download
-        // details and binding functions.
-        const docFragment = document.createDocumentFragment();
-        docFragment.appendChild(container);
-        // Update download details, check the checkbox if it has been
-        // selected.
-        checkSelectedFiles(docFragment, download.gid, download.files);
-        // Bind function to show download details.
-        docFragment.querySelector(`#${container.id}`).onclick = () => {
-          showDownloadDetails(download.gid);
-        };
-        // Bind functions to start/ pause button and stop button.
-        const startOrPauseButton =
-          docFragment.querySelector(`#download-startOrPause-${download.gid}`);
-        // If download task is being paused, the button will resume
-        // download process, otherwise show error message.
-        startOrPauseButton.onclick = () => {
-          if (download.status === 'paused') {
-            resumeDownload(download.gid);
-          } else {
-            showErrorMessage('Cannot start non-paused download task.');
-          }
-        };
-        const stopButton =
-          docFragment.querySelector(`#download-stop-${download.gid}`);
-        stopButton.onclick = () => {
-          stopDownload(download.gid);
-        };
-        // Bind functions to buttons for select or unselect all files, and
-        // button for updating download task.
-        const selectAllButton = docFragment.querySelector(
-          `#download-${download.gid}-select-all-button`);
-        selectAllButton.onclick = () => {
-          selectAllFiles(download.gid);
-        };
-        const unselectAllButton = docFragment.querySelector(
-          `#download-${download.gid}-unselect-all-button`);
-        unselectAllButton.onclick = () => {
-          unselectAllFiles(download.gid);
-        };
-        const saveButton = docFragment.querySelector(
-          `#download-${download.gid}-save-button`);
-        saveButton.onclick = () => {
-          updateDownload(download.gid);
-        };
-        // Append document fragment to inactive downloads list.
-        inactiveDownloads.appendChild(docFragment);
-      });
-    } catch (error) {
-      showErrorMessage('Unable to get waiting downloads.');
-    }
+/**
+ * Renders waiting (waiting or paused) download tasks.
+ *
+ * @param {Task[]} tasks Download tasks to be rendered.
+ *
+ * @returns {Node[]} Rendered nodes.
+ */
+const renderWaitingDownloads = (tasks) => tasks.map((task) => {
+  const options = {
+    isPausable: false,
+    isResumable: false,
+    isStoppable: true,
+    isRemovable: false,
+    isUpdatable: true
   };
+  if (task.status === 'waiting') {
+    options.isPausable = true;
+  }
+  if (task.status === 'paused') {
+    options.isResumable = true;
+  }
+  // Updating a download task which has only 1 file has no effect and
+  // meaningless.
+  if (task.files.length === 1) {
+    options.isUpdatable = false;
+  }
+  return renderTask(task, options);
+});
 
+/**
+ * Renders stopped download tasks.
+ *
+ * @param {Task[]} tasks Download tasks to be rendered.
+ *
+ * @returns {Node[]} Rendered nodes.
+ */
+const renderStoppedDownloads = (tasks) => tasks.map((task) => {
   /**
-   * Gets stopped download tasks. At most 1000 stopped download tasks will be
-   * retrieved.
-   *
-   * @async
+   * @todo Simplify this.
    */
-  const getStoppedDownloads = async () => {
-    try {
-      const result = await aria2Client({
-        rpcEndpoint,
-        authToken: rpcAuthToken,
-        method: 'aria2.tellStopped',
-        parameters: [
-          // Starts from beginning, offset is zero.
-          0,
-          // Get at most 1000 stopped download tasks.
-          1000
-        ]
-      });
-      result.forEach((download) => {
-        // Extract paths of files.
-        const fileInfos = [];
-        download.files.forEach((file) => {
-          fileInfos.push({
-            fileName: file.path
-          });
-        });
-        // Define download task details for rendering.
-        const uploadSpeed =
-          speedInMbps(parseInt(download.uploadSpeed, RADIX_DECIMAL));
-        const downloadSpeed =
-          speedInMbps(parseInt(download.downloadSpeed, RADIX_DECIMAL));
-        const progressPercentage =
-          Number((download.completedLength / download.totalLength) * 100)
-            .toFixed(2);
-        const downloadDetails = {
-          gid: download.gid,
-          uploadSpeed: `${uploadSpeed} Mb/s`,
-          downloadSpeed: `${downloadSpeed} Mb/s`,
-          completePercentage: `${progressPercentage} %`,
-          status: download.status,
-          downloadFiles: fileInfos,
-          canBePaused: false,
-          canBeUpdated: false
-        };
-        // Render download task, embed the rendered HTML fragment in a <div>
-        // element
-        const container = document.createElement('div');
-        container.innerHTML =
-          Mustache.render(downloadTaskTemplate, downloadDetails);
-        container.id = `download-${download.gid}`;
-        // Append container to document fragment before updating download
-        // details and binding functions.
-        const docFragment = document.createDocumentFragment();
-        docFragment.appendChild(container);
-        // Update download details, check the checkbox if it has been
-        // selected.
-        checkSelectedFiles(docFragment, download.gid, download.files);
-        // Bind function to show download details.
-        docFragment.querySelector(`#${container.id}`).onclick = () => {
-          showDownloadDetails(download.gid);
-        };
-        // Bind functions to stop button.
-        const stopButton =
-          docFragment.querySelector(`#download-stop-${download.gid}`);
-        stopButton.onclick = () => {
-          removeDownload(download.gid);
-        };
-        // Append document fragment to inactive downloads list.
-        inactiveDownloads.appendChild(container);
-      });
-    } catch (error) {
-      showErrorMessage('Unable to get stopped downloads.');
-    }
+  const options = {
+    isPausable: false,
+    isResumable: false,
+    isStoppable: false,
+    isRemovable: true,
+    isUpdatable: false
   };
+  return renderTask(task, options);
+});
 
-  /**
-   * Gets download tasks.
-   */
-  const getDownloads = () => {
-    clearChildren(activeDownloads);
-    clearChildren(inactiveDownloads);
-    // Getting active, waiting, and stopped download tasks can be done in
-    // parallel, so await is not needed.
-    getActiveDownloads();
-    getWaitingDownloads();
-    getStoppedDownloads();
+/**
+ * Clears children nodes from the target node.
+ *
+ * @param {Node} node Target node.
+ */
+const clearChildren = (node) => {
+  while (node.hasChildNodes()) {
+    node.removeChild(node.lastChild);
+  }
+};
+
+/**
+ * Hides error message.
+ */
+const hideError = () => {
+  errorPanel.style.display = 'none';
+};
+
+/**
+ * Shows error message.
+ *
+ * @param {string} message Error message.
+ */
+const showError = (message) => {
+  clearChildren(errorPanel);
+  errorPanel.append(message);
+  errorPanel.style.display = 'block';
+};
+
+/**
+ * Shows aria2 version.
+ */
+const showVersion = async () => {
+  try {
+    const result = await client.getVersion();
+    clearChildren(versionPanel);
+    versionPanel.append(result);
+  } catch (error) {
+    showError(`Cannot show version: ${error.message}`);
+  }
+};
+
+/**
+ * Shows global statistics.
+ */
+const showGlobalStat = async () => {
+  try {
+    const result = await client.getGlobalStat();
+    clearChildren(uploadSpeedPanel);
+    clearChildren(downloadSpeedPanel);
+    uploadSpeedPanel.append(`${result.uploadSpeed} Mbps`);
+    downloadSpeedPanel.append(`${result.downloadSpeed} Mbps`);
+  } catch (error) {
+    showError(`Cannot show statistics: ${error.message}`);
+  }
+};
+
+/**
+ * Shows active download tasks.
+ */
+const showActiveDownloads = async () => {
+  let tasks = null;
+  try {
+    tasks = await client.getActiveDownloads();
+  } catch (error) {
+    showError(`Cannot show active downloads: ${error.message}`);
+    return;
+  }
+  clearChildren(activeDownloads);
+  if (tasks.length === 0) {
+    activeDownloads.append(renderNA());
+    return;
+  }
+  activeDownloads.append(...renderActiveDownloads(tasks));
+};
+
+/**
+ * Shows waiting (waiting or paused) download tasks.
+ */
+const showWaitingDownloads = async () => {
+  let tasks = null;
+  try {
+    tasks = await client.getWaitingDownloads(MAX_WAITING);
+  } catch (error) {
+    showError(`Cannot show downloads in queue: ${error.message}`);
+    return;
+  }
+  clearChildren(waitingDownloads);
+  if (tasks.length === 0) {
+    waitingDownloads.append(renderNA());
+    return;
+  }
+  waitingDownloads.append(...renderWaitingDownloads(tasks));
+};
+
+/**
+ * Shows stopped download tasks.
+ */
+const showStoppedDownloads = async () => {
+  let tasks = null;
+  try {
+    tasks = await client.getStoppeddownloads(MAX_STOPPED);
+  } catch (error) {
+    showError(`Cannot show stopped downloads: ${error.message}`);
+    return;
+  }
+  clearChildren(inactiveDownloads);
+  if (tasks.length === 0) {
+    inactiveDownloads.append(renderNA());
+    return;
+  }
+  inactiveDownloads.append(...renderStoppedDownloads(tasks));
+};
+
+/**
+ * Show all download tasks.
+ */
+const showDownloads = () => {
+  showActiveDownloads();
+  showWaitingDownloads();
+  showStoppedDownloads();
+};
+
+/**
+ * Adds download task by the URL.
+ *
+ * @param {string} url URL.
+ */
+const addByURL = async (url) => {
+  hideError();
+  try {
+    await client.addDownloadByURL(url);
+    urlForm.reset();
+    showGlobalStat();
+    showDownloads();
+  } catch (error) {
+    showError(`Cannot add download task: ${error.message}`);
+  }
+};
+
+/**
+ * Adds download task by the torrent file.
+ *
+ * @param {string} fileBase64 Torrent file in Base64 encoding.
+ */
+const addByTorrent = async (fileBase64) => {
+  try {
+    await client.addDownloadByTorrent(fileBase64);
+    torrentFileForm.reset();
+    showGlobalStat();
+    showDownloads();
+  } catch (error) {
+    showError(`Cannot add download task: ${error.message}`);
+  }
+};
+
+/**
+ * Updates a download task.
+ *
+ * @param {string} gid Task ID.
+ * @param {number[]} indices Indices (1-based) of selected files to download.
+ */
+const updateTask = async (gid, indices) => {
+  try {
+    await client.updateDownload(gid, indices);
+    showGlobalStat();
+    showDownloads();
+  } catch (error) {
+    showError(`Cannot update download task: ${error.message}`);
+  }
+};
+
+/**
+ * Pauses a download task.
+ *
+ * @param {string} gid Task ID.
+ */
+const pauseTask = async (gid) => {
+  try {
+    await client.forcePause(gid);
+    showGlobalStat();
+    showDownloads();
+  } catch (error) {
+    showError(`Cannot pause download task: ${error.message}`);
+  }
+};
+
+/**
+ * Resumes a download task.
+ *
+ * @param {string} gid Task ID.
+ */
+const resumeTask = async (gid) => {
+  try {
+    await client.resumeDownload(gid);
+    showGlobalStat();
+    showDownloads();
+  } catch (error) {
+    showError(`Cannot resume download task: ${error.message}`);
+  }
+};
+
+/**
+ * Stops a download task.
+ *
+ * @param {string} gid Task ID.
+ */
+const stopTask = async (gid) => {
+  try {
+    await client.forceStop(gid);
+    showGlobalStat();
+    showDownloads();
+  } catch (error) {
+    showError(`Cannot stop download task: ${error.message}`);
+  }
+};
+
+/**
+ * Removes a download task.
+ *
+ * @param {string} gid Task ID.
+ */
+const removeTask = async (gid) => {
+  try {
+    await client.removeDownload(gid);
+    showGlobalStat();
+    showDownloads();
+  } catch (error) {
+    showError(`Cannot remove download task: ${error.message}`);
+  }
+};
+
+addByURLButton.onclick = () => {
+  urlForm.style.display = 'block';
+  torrentFileForm.style.display = 'none';
+  settingsForm.style.display = 'none';
+};
+
+addByTorrentButton.onclick = () => {
+  urlForm.style.display = 'none';
+  torrentFileForm.style.display = 'block';
+  settingsForm.style.display = 'none';
+};
+
+settingsButton.onclick = () => {
+  urlForm.style.display = 'none';
+  torrentFileForm.style.display = 'none';
+  settingsForm.style.display = 'block';
+};
+
+refreshButton.onclick = () => {
+  hideError();
+  showGlobalStat();
+  showDownloads();
+};
+
+urlForm.onsubmit = () => {
+  const url = document.getElementById('url').value;
+  if (url === '') {
+    showError('URL is missing.');
+    return;
+  }
+  addByURL(url);
+  return false;
+};
+
+torrentFileForm.onsubmit = () => {
+  const fileList = document.getElementById('torrent-file').files;
+  if (fileList === 0) {
+    showError('Torrent file is missing.');
+    return;
+  }
+  // Currently only one torrent file is processed per time.
+  const file = fileList[0];
+  const fileReader = new window.FileReader();
+  fileReader.onload = (event) => {
+    // Only the file content in Base64 encoding is needed.
+    const needle = 'base64,';
+    const content = event.target.result;
+    const fileBase64 = content.slice(content.indexOf(needle) + needle.length);
+    addByTorrent(fileBase64);
   };
-
-  /**
-   * Bind functions to UI components events.
-   */
-
-  /**
-   * Shows command panel for user to add a download task by URL.
-   */
-  document.getElementById('add-by-url-button').onclick = () => {
-    hideErrorMessage();
-    hideCommandPanels();
-    addByUrlPanel.style.display = 'block';
+  fileReader.onerror = () => {
+    showError('Cannot read file.');
   };
+  fileReader.readAsDataURL(file);
+  return false;
+};
 
-  /**
-   * Handles submission of adding download task by URL.
-   */
-  addByUrlPanel.onsubmit = () => {
-    const url = document.getElementById('new-download-url').value;
-    hideErrorMessage();
-    // If RPC interface endpoint has not been configured, show error message and
-    // cancel the submission.
-    if (rpcEndpoint === null) {
-      showErrorMessage('Host and port of aria2 are not configured.');
-      return false;
-    }
-    // If URL is empty, show error message and cancel the submission.
-    if (url === '') {
-      showErrorMessage('Missing URL.');
-      return false;
-    }
-    addDownloadByUrl(url);
-    // Reset the form.
-    addByUrlPanel.reset();
+settingsForm.onsubmit = () => {
+  const host = document.getElementById('host').value;
+  const port = document.getElementById('port').value;
+  const token = document.getElementById('token').value;
+  if ((host === '') || (port === '')) {
+    showError('Host or port is missing.');
     return false;
-  };
-
-  /**
-   * Shows command panel for user to add a download task by BitTorrent file.
-   */
-  document.getElementById('add-by-torrent-button').onclick = () => {
-    hideErrorMessage();
-    hideCommandPanels();
-    addByTorrentPanel.style.display = 'block';
-  };
-
-  /**
-   * Handles submission of adding download task by BitTorrent file.
-   */
-  addByTorrentPanel.onsubmit = () => {
-    const torrentFiles = document.getElementById('new-download-torrent').files;
-    hideErrorMessage();
-    // If RPC interface endpoint has not been configured, show error message and
-    // cancel the submission.
-    if (rpcEndpoint === null) {
-      showErrorMessage('Host and port of aria2 are not configured.');
-      return false;
-    }
-    // If no files has been selected, show error message and cancel the
-    // submission.
-    if (torrentFiles.length === 0) {
-      showErrorMessage('Missing BitTorrent file.');
-      return false;
-    }
-    const torrentFile = torrentFiles[0];
-    const fileReader = new window.FileReader();
-    fileReader.onload = (event) => {
-      let fileInBase64 = event.target.result;
-      // Only the file content in Base64 encoding is needed.
-      fileInBase64 =
-        fileInBase64.substring(fileInBase64.indexOf('base64,') + 7);
-      addDownloadByTorrent(fileInBase64);
-      // Reset the form.
-      addByTorrentPanel.reset();
-    };
-    fileReader.readAsDataURL(torrentFile);
-    return false;
-  };
-
-  /**
-   * Shows command panel for user to configure the settings.
-   */
-  document.getElementById('settings-button').onclick = () => {
-    hideErrorMessage();
-    hideCommandPanels();
-    document.getElementById('settings-panel').style.display = 'block';
-  };
-
-  /**
-   * Handles submission of new configurations.
-   */
-  document.getElementById('settings-panel').onsubmit = () => {
-    const protocol = window.location.protocol;
-    const host = document.getElementById('aria2-host').value;
-    const port = document.getElementById('aria2-port').value;
-    const token = document.getElementById('aria2-token').value;
-    hideErrorMessage();
-    if ((host === '') || (port === '')) {
-      showErrorMessage('Missing host or port of aria2.');
-      return false;
-    }
-    rpcEndpoint = `${protocol}//${host}:${port}/jsonrpc`;
-    if (token.length > 0) {
-      rpcAuthToken = `token:${token}`;
-    }
-    hideCommandPanels();
-    // Show statistics after configuring settings.
-    getStatistics();
-    // Get download tasks.
-    getDownloads();
-    return false;
-  };
-
-  /**
-   * Refreshes statistics and the list of download tasks.
-   */
-  document.getElementById('refresh-button').onclick = () => {
-    hideErrorMessage();
-    // If RPC interface endpoint has not been configured, show error message and
-    // stop.
-    if (rpcEndpoint === null) {
-      showErrorMessage('Host and port of aria2 are not configured.');
-      return;
-    }
-    hideCommandPanels();
-    getStatistics();
-    getDownloads();
-  };
-
-  // Pre-compile the download task template.
-  Mustache.parse(downloadTaskTemplate);
-})();
+  }
+  let authToken = null;
+  if (token.length !== 0) {
+    authToken = token;
+  }
+  client.setConfig({
+    protocol: window.location.protocol,
+    host,
+    port,
+    token: authToken
+  });
+  hideError();
+  showVersion();
+  showGlobalStat();
+  showDownloads();
+  return false;
+};
