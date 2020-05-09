@@ -4,7 +4,7 @@
 
 A simple web client for [aria2](http://aria2.sourceforge.net/).
 
-Remote is not built with any fancy framework or libraries. Remote is built with
+Remote is not built with any fancy framework or library. Remote is built with
 basic HTML5 features and simple CSS rules, for example:
 
 * [HTMLTemplateElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTemplateElement)
