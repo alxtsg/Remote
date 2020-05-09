@@ -1,0 +1,36 @@
+{
+  "id": 1589040945339,
+  "jsonrpc": "2.0",
+  "result": [
+    {
+      "completedLength": "0",
+      "connections": "0",
+      "dir": "\/home\/alex\/shared\/downloads",
+      "downloadSpeed": "0",
+      "errorCode": "19",
+      "errorMessage": "CUID#25483 - Name resolution for example.invalid failed:Domain name not found",
+      "files": [
+        {
+          "completedLength": "0",
+          "index": "1",
+          "length": "0",
+          "path": "",
+          "selected": "true",
+          "uris": [
+            {
+              "status": "used",
+              "uri": "https:\/\/example.invalid\/file.txt"
+            }
+          ]
+        }
+      ],
+      "gid": "5b684d53f1ae2606",
+      "numPieces": "0",
+      "pieceLength": "1048576",
+      "status": "error",
+      "totalLength": "0",
+      "uploadLength": "0",
+      "uploadSpeed": "0"
+    }
+  ]
+}
