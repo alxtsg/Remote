@@ -304,14 +304,16 @@ export default class Aria2Client {
    *
    * @async
    *
+   * @param {number} max Maximum number of waiting download tasks to get.
+   *
    * @returns {Task[]} Download tasks.
    *
    * @throws When unable to get waiting download tasks.
    */
-  async getWaitingDownloads() {
+  async getWaitingDownloads(max) {
     const results = await this.send({
       method: 'aria2.tellWaiting',
-      parameters: []
+      parameters: [0, max]
     });
     return this.parseDownloadTasks(results);
   }
@@ -321,14 +323,16 @@ export default class Aria2Client {
    *
    * @async
    *
+   * @param {number} max Maximum number of stopped download tasks to get.
+   *
    * @returns {Task[]} Download tasks.
    *
    * @throws When unable to get stopped download tasks.
    */
-  async getStoppeddownloads() {
+  async getStoppeddownloads(max) {
     const results = await this.send({
       method: 'aria2.tellStopped',
-      parameters: []
+      parameters: [0, max]
     });
     return this.parseDownloadTasks(results);
   }
