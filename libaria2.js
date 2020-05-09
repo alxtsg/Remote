@@ -267,7 +267,7 @@ export default class Aria2Client {
         this.toMbps(parseInt(result.uploadSpeed, RADIX_DECIMAL));
       const downloadSpeed =
         this.toMbps(parseInt(result.downloadSpeed, RADIX_DECIMAL));
-      const completedLength = parseInt(result.downloadSpeed, RADIX_DECIMAL);
+      const completedLength = parseInt(result.completedLength, RADIX_DECIMAL);
       const totalLength = parseInt(result.totalLength, RADIX_DECIMAL);
       const progress = ((completedLength / totalLength) * 100).toFixed(2);
       return {
