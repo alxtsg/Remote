@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @typedef {import('./type-def').GlobalStat} GlobalStat
  * @typedef {import('./type-def').Task} Task
@@ -99,7 +97,7 @@ export default class Aria2Client {
       }
     );
     const responseJson = await response.json();
-    if (responseJson.hasOwnProperty('error')) {
+    if (Object.prototype.hasOwnProperty.call(responseJson, 'error')) {
       throw new Error(responseJson.error.message);
     }
     return responseJson.result;

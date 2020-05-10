@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @typedef {import('./type-def').Task} Task
  * @typedef {import('./type-def').TaskFile} TaskFile
